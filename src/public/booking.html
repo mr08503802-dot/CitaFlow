@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reserva tu Cita | CitaFlow</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .step-badge-active { background-color: #6366f1; color: white; }
+    .step-badge-done { background-color: #10b981; color: white; }
+    .step-badge-idle { background-color: #27272a; color: #a1a1aa; }
+  </style>
+</head>
+<body class="bg-zinc-950 text-zinc-100 min-h-screen pb-20 selection:bg-indigo-500 selection:text-white">
+
+  <!-- Header -->
+  <header class="border-b border-zinc-800 bg-zinc-900/60 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div id="biz-avatar" class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center font-bold text-white text-lg shadow-md shadow-indigo-600/20">
+          💈
+        </div>
+        <div>
+          <h1 id="biz-name" class="font-bold text-base leading-tight text-white">Cargando negocio...</h1>
+          <p id="biz-address" class="text-xs text-zinc-400">Verificando disponibilidad...</p>
+        </div>
+      </div>
+      <a href="/" class="text-xs text-zinc-500 hover:text-zinc-300 transition">Powered by CitaFlow</a>
+    </div>
+  </header>
+
+  <main class="max-w-xl mx-auto px-4 pt-6">
+
+    <!-- Progress Steps Tracker -->
+    <div class="flex items-center justify-between mb-8 px-2">
+      <div class="flex items-center gap-2">
+        <span id="step-num-1" class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold step-badge-active">1</span>
+        <span class="text-xs font-medium text-zinc-300 hidden sm:inline">Servicio</span>
+      </div>
+      <div class="flex-1 h-0.5 mx-2 bg-zinc-800"></div>
+      <div class="flex items-center gap-2">
+        <span id="step-num-2" class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold step-badge-idle">2</span>
+        <span class="text-xs font-medium text-zinc-500 hidden sm:inline">Especialista</span>
+      </div>
+      <div class="flex-1 h-0.5 mx-2 bg-zinc-800"></div>
+      <div class="flex items-center gap-2">
+        <span id="step-num-3" class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold step-badge-idle">3</span>
+        <span class="text-xs font-medium text-zinc-500 hidden sm:inline">Fecha y Hora</span>
+      </div>
+      <div class="flex-1 h-0.5 mx-2 bg-zinc-800"></div>
+      <div class="flex items-center gap-2">
+        <span id="step-num-4" class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold step-badge-idle">4</span>
+        <span class="text-xs font-medium text-zinc-500 hidden sm:inline">Tus Datos</span>
+      </div>
+    </div>
+
+    <!-- Error Alert Banner -->
+    <div id="alert-banner" class="hidden mb-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-sm flex items-start gap-3">
+      <span class="text-lg">⚠️</span>
+      <div id="alert-message" class="flex-1"></div>
+    </div>
+
+    <!-- STEP 1: Select Service -->
+    <section id="step-1" class="space-y-4">
+      <div>
+        <h2 class="text-xl font-bold text-white tracking-tight">Selecciona un servicio</h2>
+        <p class="text-xs text-zinc-400 mt-1">Elige el servicio que deseas agendar con nosotros.</p>
+      </div>
+
+      <div id="services-list" class="space-y-3">
+        <!-- Rendered dynamically -->
+        <div class="p-6 rounded-xl bg-zinc-900 border border-zinc-800 text-center text-zinc-500">
+          Cargando catálogo de servicios...
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 2: Select Specialist -->
+    <section id="step-2" class="hidden space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-xl font-bold text-white tracking-tight">Elige tu especialista</h2>
+          <p class="text-xs text-zinc-400 mt-1">Selecciona quién te atenderá o elige el primer disponible.</p>
+        </div>
+        <button onclick="goToStep(1)" class="text-xs text-zinc-400 hover:text-white transition">← Cambiar servicio</button>
+      </div>
+
+      <div id="staff-list" class="space-y-3">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- STEP 3: Choose Date & Time Slot -->
+    <section id="step-3" class="hidden space-y-5">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-xl font-bold text-white tracking-tight">Fecha y Horario disponible</h2>
+          <p class="text-xs text-zinc-400 mt-1">Calculado en tiempo real sin solapamientos.</p>
+        </div>
+        <button onclick="goToStep(2)" class="text-xs text-zinc-400 hover:text-white transition">← Cambiar especialista</button>
+      </div>
+
+      <!-- Date Selector -->
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-2">Selecciona la Fecha:</label>
+        <input type="date" id="booking-date" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
+      </div>
+
+      <!-- Available Slots Container -->
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <label class="block text-xs font-semibold uppercase tracking-wider text-zinc-400">Horarios Disponibles:</label>
+          <span id="slots-count-badge" class="text-xs text-zinc-500">Calculando...</span>
+        </div>
+
+        <div id="slots-loading" class="hidden p-8 rounded-xl bg-zinc-900 border border-zinc-800 text-center text-zinc-400 text-xs">
+          <div class="inline-block w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mb-2"></div>
+          <div>Consultando disponibilidad en tiempo real...</div>
+        </div>
+
+        <div id="slots-grid" class="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
+          <!-- Rendered dynamically -->
+        </div>
+
+        <div id="no-slots" class="hidden p-6 rounded-xl bg-zinc-900 border border-zinc-800 text-center text-zinc-400 text-xs">
+          No hay turnos disponibles para esta fecha. Por favor selecciona otro día.
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 4: Client Information Form -->
+    <section id="step-4" class="hidden space-y-5">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-xl font-bold text-white tracking-tight">Tus Datos de Contacto</h2>
+          <p class="text-xs text-zinc-400 mt-1">Para enviarte la confirmación y recordatorio por WhatsApp.</p>
+        </div>
+        <button onclick="goToStep(3)" class="text-xs text-zinc-400 hover:text-white transition">← Cambiar fecha</button>
+      </div>
+
+      <!-- Booking Summary Card -->
+      <div class="p-4 rounded-xl bg-indigo-950/40 border border-indigo-500/20 text-xs space-y-1.5">
+        <div class="flex justify-between text-zinc-300">
+          <span>Servicio:</span>
+          <span id="summary-service" class="font-semibold text-white"></span>
+        </div>
+        <div class="flex justify-between text-zinc-300">
+          <span>Especialista:</span>
+          <span id="summary-staff" class="font-semibold text-white"></span>
+        </div>
+        <div class="flex justify-between text-zinc-300">
+          <span>Fecha y Hora:</span>
+          <span id="summary-datetime" class="font-semibold text-indigo-400"></span>
+        </div>
+        <div class="flex justify-between text-zinc-300 pt-1 border-t border-indigo-500/20">
+          <span>Total a pagar en local:</span>
+          <span id="summary-price" class="font-bold text-emerald-400 text-sm"></span>
+        </div>
+      </div>
+
+      <form id="client-form" onsubmit="submitBooking(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-zinc-300 mb-1">Nombre Completo *</label>
+          <input type="text" id="client-name" required placeholder="Ej: Gabriel Martínez" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-indigo-500" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-zinc-300 mb-1">WhatsApp / Teléfono Móvil *</label>
+          <input type="tel" id="client-phone" required placeholder="Ej: +34 612 345 678" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-indigo-500" />
+          <p class="text-[11px] text-zinc-500 mt-1">Recibirás tu recordatorio y confirmación por WhatsApp.</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-zinc-300 mb-1">Correo Electrónico *</label>
+          <input type="email" id="client-email" required placeholder="tu@correo.com" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-indigo-500" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-zinc-300 mb-1">Notas especiales (Opcional)</label>
+          <textarea id="client-notes" rows="2" placeholder="Ej: Es mi primera vez, deseo consulta previa..." class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500"></textarea>
+        </div>
+
+        <button type="submit" id="btn-submit-booking" class="w-full py-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm transition shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2">
+          <span>Confirmar y Reservar Cita</span>
+        </button>
+      </form>
+    </section>
+
+    <!-- STEP 5: Success & Confirmation View -->
+    <section id="step-5" class="hidden text-center space-y-6 pt-4">
+      <div class="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center text-3xl mx-auto shadow-lg shadow-emerald-500/20 animate-bounce">
+        ✓
+      </div>
+
+      <div>
+        <h2 class="text-2xl font-extrabold text-white">¡Tu Cita ha sido Reservada!</h2>
+        <p class="text-xs text-zinc-400 mt-1">Hemos registrado tu turno correctamente en el sistema.</p>
+      </div>
+
+      <!-- Success Details Box -->
+      <div class="p-5 rounded-2xl bg-zinc-900 border border-zinc-800 text-left text-xs space-y-2.5">
+        <div class="flex justify-between">
+          <span class="text-zinc-400">Código de Cita:</span>
+          <span id="confirmed-id" class="font-mono font-bold text-white"></span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-zinc-400">Servicio:</span>
+          <span id="confirmed-service" class="font-bold text-white"></span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-zinc-400">Especialista:</span>
+          <span id="confirmed-staff" class="font-bold text-white"></span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-zinc-400">Horario:</span>
+          <span id="confirmed-datetime" class="font-bold text-indigo-400"></span>
+        </div>
+        <div class="flex justify-between pt-2 border-t border-zinc-800">
+          <span class="text-zinc-400">Importe a pagar:</span>
+          <span id="confirmed-price" class="font-extrabold text-emerald-400 text-sm"></span>
+        </div>
+      </div>
+
+      <!-- Action Buttons Grid: WhatsApp, Google Calendar & Online Payment -->
+      <div class="space-y-3">
+        <a id="btn-whatsapp-share" target="_blank" href="#" class="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition shadow-lg shadow-emerald-600/25 flex items-center justify-center gap-2">
+          <span>💬 Abrir confirmación en WhatsApp</span>
+        </a>
+
+        <!-- Google Calendar & iCal Buttons -->
+        <div class="grid grid-cols-2 gap-2">
+          <a id="btn-google-calendar" target="_blank" href="#" class="py-2.5 px-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-100 text-xs font-semibold transition flex items-center justify-center gap-1.5 shadow-sm">
+            <span>📅 Google Calendar</span>
+          </a>
+          <a id="btn-download-ics" href="#" class="py-2.5 px-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-100 text-xs font-semibold transition flex items-center justify-center gap-1.5 shadow-sm">
+            <span>📥 Descargar .ics</span>
+          </a>
+        </div>
+
+        <!-- Optional Online Payment / Down Payment -->
+        <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-zinc-900 to-zinc-900 border border-emerald-500/30 text-left">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-white flex items-center gap-1">
+              <span>💳 Pagar en línea ahora</span>
+              <span class="text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded font-mono">Opcional</span>
+            </span>
+            <span class="text-xs font-extrabold text-emerald-400" id="pay-online-amount"></span>
+          </div>
+          <p class="text-[11px] text-zinc-400 mb-3 leading-relaxed">
+            Garantiza tu turno de inmediato pagando con Tarjeta de Crédito, Débito o Bizum mediante pasarela segura.
+          </p>
+          <button onclick="startOnlinePayment()" id="btn-pay-online" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition shadow-md shadow-emerald-600/20 flex items-center justify-center gap-1.5">
+            <span>Proceder al Pago Seguro →</span>
+          </button>
+        </div>
+
+        <!-- Magic link simulator preview -->
+        <div class="p-4 rounded-xl bg-zinc-900/80 border border-zinc-800 text-left text-xs space-y-2">
+          <div class="font-semibold text-zinc-300 flex items-center gap-1.5">
+            <span>✨ Simulación de Enlaces Mágicos (WhatsApp / SMS / Email):</span>
+          </div>
+          <p class="text-zinc-400 text-[11px]">
+            El cliente recibe estos enlaces para confirmar o cancelar en 1 clic sin necesidad de iniciar sesión:
+          </p>
+          <div class="flex gap-2 pt-1">
+            <a id="link-magic-confirm" href="#" class="flex-1 py-2 text-center rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 font-medium transition text-[11px]">
+              Probar "Confirmar Asistencia"
+            </a>
+            <a id="link-magic-cancel" href="#" class="flex-1 py-2 text-center rounded-lg bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 font-medium transition text-[11px]">
+              Probar "Cancelar Cita"
+            </a>
+          </div>
+        </div>
+
+        <button onclick="location.reload()" class="w-full py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-medium transition">
+          Agendar otra cita
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // State
+    const state = {
+      slug: window.location.pathname.split('/')[2] || 'barberia-imperio',
+      business: null,
+      selectedService: null,
+      selectedStaff: 'any',
+      selectedDate: '',
+      selectedSlot: null,
+    };
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Set default date to today or tomorrow
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      state.selectedDate = `${yyyy}-${mm}-${dd}`;
+      document.getElementById('booking-date').value = state.selectedDate;
+      document.getElementById('booking-date').min = state.selectedDate;
+
+      document.getElementById('booking-date').addEventListener('change', (e) => {
+        state.selectedDate = e.target.value;
+        loadAvailableSlots();
+      });
+
+      await loadBusinessData();
+    });
+
+    function showAlert(msg) {
+      const banner = document.getElementById('alert-banner');
+      document.getElementById('alert-message').textContent = msg;
+      banner.classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function hideAlert() {
+      document.getElementById('alert-banner').classList.add('hidden');
+    }
+
+    async function loadBusinessData() {
+      try {
+        const res = await fetch(`/api/public/b/${state.slug}`);
+        const data = await res.json();
+
+        if (!data.success) {
+          showAlert(data.message || 'No se pudo cargar la información del negocio.');
+          return;
+        }
+
+        state.business = data.data;
+        document.title = `${state.business.name} | Agendamiento en Línea`;
+        document.getElementById('biz-name').textContent = state.business.name;
+        document.getElementById('biz-address').textContent = state.business.address || `Tel: ${state.business.phone}`;
+
+        renderServices();
+        renderStaff();
+      } catch (err) {
+        showAlert('Error al conectar con el servidor.');
+      }
+    }
+
+    function getCurrencySymbol(curr) {
+      if (curr === 'EUR') return '€';
+      if (curr === 'USD') return '$';
+      return curr || '$';
+    }
+
+    function renderServices() {
+      const list = document.getElementById('services-list');
+      const symbol = getCurrencySymbol(state.business.currency);
+
+      if (!state.business.services || state.business.services.length === 0) {
+        list.innerHTML = `<div class="p-6 rounded-xl bg-zinc-900 border border-zinc-800 text-center text-zinc-400 text-sm">Este negocio aún no tiene servicios publicados.</div>`;
+        return;
+      }
+
+      list.innerHTML = state.business.services.map(svc => `
+        <div onclick="selectService('${svc.id}')" class="p-4 rounded-xl bg-zinc-900 hover:bg-zinc-800/80 border border-zinc-800 hover:border-indigo-500/50 cursor-pointer transition flex items-center justify-between group">
+          <div class="flex-1 pr-4">
+            <div class="flex items-center gap-2">
+              <h3 class="font-bold text-white group-hover:text-indigo-400 transition">${svc.name}</h3>
+              <span class="text-xs px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 font-medium">⏱ ${svc.duration_minutes} min</span>
+            </div>
+            ${svc.description ? `<p class="text-xs text-zinc-400 mt-1 line-clamp-2">${svc.description}</p>` : ''}
+          </div>
+          <div class="text-right">
+            <span class="text-base font-extrabold text-emerald-400">${symbol}${svc.price.toFixed(2)}</span>
+            <div class="text-[11px] text-indigo-400 font-semibold mt-1">Elegir →</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function selectService(serviceId) {
+      hideAlert();
+      state.selectedService = state.business.services.find(s => s.id === serviceId);
+      goToStep(2);
+    }
+
+    function renderStaff() {
+      const list = document.getElementById('staff-list');
+      const staffMembers = state.business.staff || [];
+
+      let html = `
+        <div onclick="selectStaff('any')" class="p-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-indigo-500/50 cursor-pointer transition flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xl">
+            ⚡
+          </div>
+          <div class="flex-1">
+            <h3 class="font-bold text-white">Cualquier Especialista Disponible</h3>
+            <p class="text-xs text-zinc-400">Te asignaremos el primer turno libre más rápido.</p>
+          </div>
+          <span class="text-xs text-indigo-400 font-semibold">Seleccionar →</span>
+        </div>
+      `;
+
+      html += staffMembers.map(st => `
+        <div onclick="selectStaff('${st.id}')" class="p-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-indigo-500/50 cursor-pointer transition flex items-center gap-4">
+          <img src="${st.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80'}" class="w-12 h-12 rounded-xl object-cover border border-zinc-700" alt="${st.name}" />
+          <div class="flex-1">
+            <h3 class="font-bold text-white">${st.name}</h3>
+            <p class="text-xs text-zinc-400">Especialista del local</p>
+          </div>
+          <span class="text-xs text-indigo-400 font-semibold">Seleccionar →</span>
+        </div>
+      `).join('');
+
+      list.innerHTML = html;
+    }
+
+    function selectStaff(staffId) {
+      hideAlert();
+      state.selectedStaff = staffId;
+      goToStep(3);
+      loadAvailableSlots();
+    }
+
+    async function loadAvailableSlots() {
+      if (!state.selectedService) return;
+
+      const loading = document.getElementById('slots-loading');
+      const grid = document.getElementById('slots-grid');
+      const noSlots = document.getElementById('no-slots');
+      const badge = document.getElementById('slots-count-badge');
+
+      loading.classList.remove('hidden');
+      grid.innerHTML = '';
+      noSlots.classList.add('hidden');
+      badge.textContent = 'Calculando...';
+
+      try {
+        const queryParams = new URLSearchParams({
+          serviceId: state.selectedService.id,
+          staffId: state.selectedStaff,
+          date: state.selectedDate,
+        });
+
+        const res = await fetch(`/api/public/b/${state.slug}/slots?${queryParams.toString()}`);
+        const data = await res.json();
+        loading.classList.add('hidden');
+
+        if (!data.success) {
+          showAlert(data.message || 'Error al obtener cupos disponibles.');
+          return;
+        }
+
+        const slots = data.data || [];
+        badge.textContent = `${slots.length} turnos disponibles`;
+
+        if (slots.length === 0) {
+          noSlots.classList.remove('hidden');
+          return;
+        }
+
+        grid.innerHTML = slots.map(s => `
+          <button onclick="selectSlot('${s.isoTime}', '${s.time}')" class="py-3 px-2 rounded-xl bg-zinc-900 hover:bg-indigo-600 border border-zinc-800 hover:border-indigo-500 text-center font-bold text-sm text-zinc-100 hover:text-white transition shadow-sm">
+            ${s.time}
+          </button>
+        `).join('');
+      } catch (err) {
+        loading.classList.add('hidden');
+        showAlert('No se pudieron calcular los horarios libres.');
+      }
+    }
+
+    function selectSlot(isoTime, displayTime) {
+      hideAlert();
+      state.selectedSlot = { isoTime, displayTime };
+
+      // Update Summary in Step 4
+      const symbol = getCurrencySymbol(state.business.currency);
+      document.getElementById('summary-service').textContent = state.selectedService.name;
+      
+      let staffName = 'Cualquier disponible';
+      if (state.selectedStaff !== 'any') {
+        const st = state.business.staff.find(s => s.id === state.selectedStaff);
+        if (st) staffName = st.name;
+      }
+      document.getElementById('summary-staff').textContent = staffName;
+      document.getElementById('summary-datetime').textContent = `${state.selectedDate} a las ${displayTime}`;
+      document.getElementById('summary-price').textContent = `${symbol}${state.selectedService.price.toFixed(2)}`;
+
+      goToStep(4);
+    }
+
+    async function submitBooking(e) {
+      e.preventDefault();
+      hideAlert();
+
+      const btn = document.getElementById('btn-submit-booking');
+      btn.disabled = true;
+      btn.innerHTML = `<span class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> Procesando reserva...`;
+
+      const payload = {
+        serviceId: state.selectedService.id,
+        staffId: state.selectedStaff === 'any' ? undefined : state.selectedStaff,
+        clientName: document.getElementById('client-name').value,
+        clientPhone: document.getElementById('client-phone').value,
+        clientEmail: document.getElementById('client-email').value,
+        startTime: state.selectedSlot.isoTime,
+        notes: document.getElementById('client-notes').value,
+      };
+
+      try {
+        const res = await fetch(`/api/public/b/${state.slug}/book`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await res.json();
+        btn.disabled = false;
+        btn.innerHTML = `Confirmar y Reservar Cita`;
+
+        if (!data.success) {
+          showAlert(data.message || 'Error al procesar la reserva.');
+          return;
+        }
+
+        // Show Success Step 5
+        const apt = data.data.appointment;
+        state.createdAppointment = apt;
+        const symbol = getCurrencySymbol(state.business.currency);
+        document.getElementById('confirmed-id').textContent = apt.id.slice(-8).toUpperCase();
+        document.getElementById('confirmed-service').textContent = apt.serviceName;
+        document.getElementById('confirmed-staff').textContent = apt.staffName;
+        document.getElementById('confirmed-datetime').textContent = new Date(apt.startTime).toLocaleString('es-ES', { dateStyle: 'medium', timeStyle: 'short' });
+        document.getElementById('confirmed-price').textContent = `${symbol}${apt.servicePrice.toFixed(2)}`;
+        document.getElementById('pay-online-amount').textContent = `${symbol}${apt.servicePrice.toFixed(2)}`;
+
+        // WhatsApp button link
+        document.getElementById('btn-whatsapp-share').href = data.data.whatsappUrl;
+
+        // Magic action links
+        document.getElementById('link-magic-confirm').href = data.data.magicLinks.confirmUrl;
+        document.getElementById('link-magic-cancel').href = data.data.magicLinks.cancelUrl;
+
+        // Fetch Google Calendar & .ics links
+        fetch(`/api/calendar/appointment/${apt.id}/links`)
+          .then(res => res.json())
+          .then(calData => {
+            if (calData.success) {
+              document.getElementById('btn-google-calendar').href = calData.data.googleCalendarUrl;
+              document.getElementById('btn-download-ics').href = calData.data.icsDownloadUrl;
+            }
+          })
+          .catch(() => {});
+
+        goToStep(5);
+      } catch (err) {
+        btn.disabled = false;
+        btn.innerHTML = `Confirmar y Reservar Cita`;
+        showAlert('Error de conexión al enviar la reserva.');
+      }
+    }
+
+    async function startOnlinePayment() {
+      if (!state.createdAppointment) return;
+      const btn = document.getElementById('btn-pay-online');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> Conectando pasarela...';
+
+      try {
+        const res = await fetch('/api/public/checkout/create-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            appointmentId: state.createdAppointment.id,
+            amount: state.createdAppointment.servicePrice,
+          }),
+        });
+        const data = await res.json();
+        if (data.success && data.data.checkoutUrl) {
+          window.location.href = data.data.checkoutUrl;
+        } else {
+          alert('Error iniciando pasarela: ' + (data.message || 'Intente nuevamente'));
+          btn.disabled = false;
+          btn.innerHTML = 'Proceder al Pago Seguro →';
+        }
+      } catch (e) {
+        alert('Error conectando con el servicio de pagos.');
+        btn.disabled = false;
+        btn.innerHTML = 'Proceder al Pago Seguro →';
+      }
+    }
+
+    function goToStep(step) {
+      hideAlert();
+      for (let i = 1; i <= 5; i++) {
+        const sec = document.getElementById(`step-${i}`);
+        if (sec) sec.classList.add('hidden');
+
+        const badge = document.getElementById(`step-num-${i}`);
+        if (badge) {
+          badge.className = 'w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ';
+          if (i < step) badge.className += 'step-badge-done';
+          else if (i === step) badge.className += 'step-badge-active';
+          else badge.className += 'step-badge-idle';
+        }
+      }
+
+      const activeSec = document.getElementById(`step-${step}`);
+      if (activeSec) activeSec.classList.remove('hidden');
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  </script>
+
+</body>
+</html>

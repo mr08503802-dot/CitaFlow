@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CitaFlow | Elimina el Ausentismo y Automatiza tus Citas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .gradient-hero {
+      background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #09090b 100%);
+    }
+  </style>
+</head>
+<body class="bg-zinc-950 text-zinc-100 antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- Navbar -->
+  <nav class="border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center font-black text-xl text-white shadow-lg shadow-indigo-500/30">
+          C
+        </div>
+        <span class="text-xl font-bold tracking-tight text-white">Cita<span class="text-indigo-400">Flow</span></span>
+        <span class="hidden sm:inline-block px-2.5 py-0.5 text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-full">Micro-SaaS MVP</span>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="/login" class="text-sm font-medium text-zinc-300 hover:text-white transition">Iniciar Sesión</a>
+        <a href="/b/barberia-imperio" class="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition shadow-md shadow-indigo-600/25">
+          <span>Ver Demo Cliente</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="relative pt-20 pb-28 gradient-hero overflow-hidden border-b border-zinc-800">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 text-center relative z-10">
+      <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-zinc-800/80 border border-zinc-700 text-xs font-medium text-zinc-300 mb-8">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+        <span>Elimina hasta el 90% de los No-Shows</span>
+      </div>
+
+      <h1 class="text-4xl sm:text-6xl font-extrabold tracking-tight text-white max-w-4xl mx-auto leading-tight sm:leading-tight">
+        Automatiza tus citas y <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-violet-400 to-emerald-400">olvídate de los clientes que no asisten</span>
+      </h1>
+
+      <p class="mt-6 text-lg sm:text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed">
+        Plataforma lean de agendamiento inteligente para <span class="text-zinc-200 font-medium">Barberías, Salones y Clínicas de Estética</span>. Recordatorios automáticos por WhatsApp y confirmación en 1 solo clic.
+      </p>
+
+      <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a href="/b/barberia-imperio" class="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-base transition shadow-xl shadow-indigo-600/30 flex items-center justify-center gap-2">
+          <span>💈 Probar Reserva como Cliente</span>
+        </a>
+        <a href="/admin" class="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-100 font-semibold text-base border border-zinc-700 transition flex items-center justify-center gap-2">
+          <span>📊 Probar Dashboard de Administrador</span>
+        </a>
+      </div>
+
+      <!-- Quick credentials helper -->
+      <div class="mt-6 inline-block bg-zinc-900/90 border border-zinc-800 rounded-lg px-4 py-2 text-xs text-zinc-400">
+        🔑 Acceso Demo Admin: <span class="text-zinc-200 font-mono">admin@barberiaimperio.com</span> / <span class="text-zinc-200 font-mono">Password123!</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Problem vs Solution Stats -->
+  <section class="py-20 bg-zinc-900/40 border-b border-zinc-800/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+        <div class="p-8 rounded-2xl bg-zinc-900 border border-zinc-800">
+          <div class="text-4xl font-extrabold text-rose-400 mb-2">-28%</div>
+          <div class="text-lg font-semibold text-white mb-1">Pérdida por No-Shows</div>
+          <p class="text-sm text-zinc-400">El promedio de ingresos que un salón pierde por clientes que olvidan su turno.</p>
+        </div>
+        <div class="p-8 rounded-2xl bg-zinc-900 border border-zinc-800">
+          <div class="text-4xl font-extrabold text-emerald-400 mb-2">94%</div>
+          <div class="text-lg font-semibold text-white mb-1">Tasa de Asistencia</div>
+          <p class="text-sm text-zinc-400">Clientes confirmados mediante nuestros enlaces mágicos de WhatsApp 24h antes.</p>
+        </div>
+        <div class="p-8 rounded-2xl bg-zinc-900 border border-zinc-800">
+          <div class="text-4xl font-extrabold text-indigo-400 mb-2">0 min</div>
+          <div class="text-lg font-semibold text-white mb-1">Gestión Manual</div>
+          <p class="text-sm text-zinc-400">Cálculo de cupos en tiempo real, prevención de doble turno y recibos automáticos.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Key Architecture Features -->
+  <section class="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-16">
+      <h2 class="text-xs font-bold uppercase tracking-widest text-indigo-400 mb-3">Diseñado para la Velocidad y Conversión</h2>
+      <p class="text-3xl sm:text-4xl font-bold text-white tracking-tight">Todo lo que tu negocio necesita en un Micro-SaaS lean</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <!-- Feature 1 -->
+      <div class="p-6 rounded-2xl bg-zinc-900/60 border border-zinc-800 hover:border-zinc-700 transition">
+        <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-2xl mb-4">
+          ⚡
+        </div>
+        <h3 class="text-lg font-bold text-white mb-2">Motor de Cupos en Tiempo Real</h3>
+        <p class="text-sm text-zinc-400 leading-relaxed">
+          Algoritmo matemático que calcula slots libres según la duración exacta de cada servicio, descansos de comida y agenda del especialista. Previene double-booking.
+        </p>
+      </div>
+
+      <!-- Feature 2 -->
+      <div class="p-6 rounded-2xl bg-zinc-900/60 border border-zinc-800 hover:border-zinc-700 transition">
+        <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xl mb-4">
+          📲
+        </div>
+        <h3 class="text-lg font-bold text-white mb-2">Confirmación Mágica en 1 Clic</h3>
+        <p class="text-sm text-zinc-400 leading-relaxed">
+          Recordatorios automáticos 24 horas antes con Magic Links únicos: el cliente confirma su asistencia o cancela a tiempo con solo tocar un botón, liberando el turno.
+        </p>
+      </div>
+
+      <!-- Feature 3 -->
+      <div class="p-6 rounded-2xl bg-zinc-900/60 border border-zinc-800 hover:border-zinc-700 transition">
+        <div class="w-12 h-12 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-400 flex items-center justify-center text-2xl mb-4">
+          🧾
+        </div>
+        <h3 class="text-lg font-bold text-white mb-2">Comprobantes de Pago Listos</h3>
+        <p class="text-sm text-zinc-400 leading-relaxed">
+          Marca citas como pagadas (Efectivo, Transferencia o Tarjeta) y genera recibos profesionales en HTML/PDF descargables e imprimibles para tus clientes.
+        </p>
+      </div>
+
+      <!-- Feature 4 -->
+      <div class="p-6 rounded-2xl bg-zinc-900/60 border border-zinc-800 hover:border-zinc-700 transition">
+        <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center text-2xl mb-4">
+          👥
+        </div>
+        <h3 class="text-lg font-bold text-white mb-2">Multi-Especialista & Turnos</h3>
+        <p class="text-sm text-zinc-400 leading-relaxed">
+          Configura barberos o estilistas independientes con horarios de atención específicos por día de la semana y descansos para almuerzo.
+        </p>
+      </div>
+
+      <!-- Feature 5 -->
+      <div class="p-6 rounded-2xl bg-zinc-900/60 border border-zinc-800 hover:border-zinc-700 transition">
+        <div class="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center text-2xl mb-4">
+          🔒
+        </div>
+        <h3 class="text-lg font-bold text-white mb-2">Arquitectura 3NF & Seguridad</h3>
+        <p class="text-sm text-zinc-400 leading-relaxed">
+          Base de datos relacional normalizada en Tercera Forma Normal (3NF), validación estricta Zod, hashing seguro bcrypt, JWT y rate limiting.
+        </p>
+      </div>
+
+      <!-- Feature 6 -->
+      <div class="p-6 rounded-2xl bg-zinc-900/60 border border-zinc-800 hover:border-zinc-700 transition">
+        <div class="w-12 h-12 rounded-xl bg-pink-500/10 border border-pink-500/20 text-pink-400 flex items-center justify-center text-2xl mb-4">
+          📱
+        </div>
+        <h3 class="text-lg font-bold text-white mb-2">Página de Reserva Ultrarrápida</h3>
+        <p class="text-sm text-zinc-400 leading-relaxed">
+          Link directo para tu biografía de Instagram o WhatsApp (<code class="text-zinc-200">/b/tu-negocio</code>), diseño mobile-first sin fricción ni registros obligatorios.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Banner -->
+  <section class="py-16 bg-gradient-to-r from-indigo-900/40 via-violet-900/30 to-zinc-900 border-t border-zinc-800 text-center">
+    <div class="max-w-4xl mx-auto px-4">
+      <h2 class="text-3xl font-extrabold text-white">Comienza a probar CitaFlow ahora</h2>
+      <p class="mt-3 text-zinc-400">Accede directamente a la demo en vivo o ingresa al panel de control.</p>
+      <div class="mt-8 flex flex-wrap justify-center gap-4">
+        <a href="/b/barberia-imperio" class="px-6 py-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold transition">
+          Ver Página Pública de Reserva
+        </a>
+        <a href="/login" class="px-6 py-3 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-200 font-semibold transition">
+          Iniciar Sesión en el Dashboard
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-8 bg-zinc-950 border-t border-zinc-800/80 text-center text-xs text-zinc-500">
+    <p>CitaFlow Micro-SaaS MVP &copy; 2026. Construido con arquitectura limpia, Node.js, Express y Prisma 3NF.</p>
+  </footer>
+
+</body>
+</html>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registrar Negocio | CitaFlow</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style> body { font-family: 'Plus Jakarta Sans', sans-serif; } </style>
+</head>
+<body class="bg-zinc-950 text-zinc-100 min-h-screen flex items-center justify-center p-4 selection:bg-indigo-500 selection:text-white">
+
+  <div class="max-w-md w-full bg-zinc-900 border border-zinc-800 rounded-3xl p-8 shadow-2xl space-y-6">
+    
+    <div class="text-center space-y-2">
+      <div class="w-12 h-12 rounded-2xl bg-indigo-600 flex items-center justify-center font-black text-2xl text-white mx-auto shadow-lg shadow-indigo-600/30">
+        C
+      </div>
+      <h1 class="text-2xl font-extrabold text-white">Crea tu Negocio en CitaFlow</h1>
+      <p class="text-xs text-zinc-400">Automatiza tu agenda en 2 minutos sin contratos ni costos ocultos</p>
+    </div>
+
+    <!-- Alert -->
+    <div id="reg-alert" class="hidden p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs text-center"></div>
+
+    <form onsubmit="handleRegister(event)" class="space-y-3.5 text-xs">
+      <div>
+        <label class="block text-zinc-300 font-semibold mb-1">Nombre de tu Negocio / Barbería / Estudio *</label>
+        <input type="text" id="reg-name" required placeholder="Ej: Barbería Royal Style" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500" />
+      </div>
+
+      <div>
+        <label class="block text-zinc-300 font-semibold mb-1">Correo Electrónico *</label>
+        <input type="email" id="reg-email" required placeholder="contacto@minegocio.com" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500" />
+      </div>
+
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="block text-zinc-300 font-semibold mb-1">WhatsApp / Móvil *</label>
+          <input type="tel" id="reg-phone" required placeholder="+34..." class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500" />
+        </div>
+        <div>
+          <label class="block text-zinc-300 font-semibold mb-1">Moneda *</label>
+          <select id="reg-currency" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2.5 text-white text-sm">
+            <option value="EUR">Euros (€)</option>
+            <option value="USD">Dólares ($)</option>
+            <option value="MXN">Pesos Mexicanos (MXN)</option>
+            <option value="COP">Pesos Colombianos (COP)</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-zinc-300 font-semibold mb-1">Dirección Física (Opcional)</label>
+        <input type="text" id="reg-address" placeholder="Ej: Av. Principal 102, Local 4" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500" />
+      </div>
+
+      <div>
+        <label class="block text-zinc-300 font-semibold mb-1">Contraseña de Acceso *</label>
+        <input type="password" id="reg-password" required minlength="6" placeholder="Mínimo 6 caracteres" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500" />
+      </div>
+
+      <button type="submit" id="btn-register" class="w-full py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm transition shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 mt-2">
+        <span>Comenzar Ahora</span>
+      </button>
+    </form>
+
+    <div class="pt-2 text-center text-xs text-zinc-400 border-t border-zinc-800">
+      ¿Ya tienes cuenta? <a href="/login" class="text-indigo-400 hover:underline font-semibold">Inicia Sesión</a>
+    </div>
+
+  </div>
+
+  <script>
+    async function handleRegister(e) {
+      e.preventDefault();
+      const alert = document.getElementById('reg-alert');
+      alert.classList.add('hidden');
+
+      const btn = document.getElementById('btn-register');
+      btn.disabled = true;
+      btn.innerHTML = `<span class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> Configurando negocio...`;
+
+      const payload = {
+        name: document.getElementById('reg-name').value,
+        email: document.getElementById('reg-email').value,
+        phone: document.getElementById('reg-phone').value,
+        currency: document.getElementById('reg-currency').value,
+        address: document.getElementById('reg-address').value,
+        password: document.getElementById('reg-password').value,
+      };
+
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await res.json();
+        btn.disabled = false;
+        btn.innerHTML = 'Comenzar Ahora';
+
+        if (!data.success) {
+          alert.textContent = data.message || 'Error en el registro.';
+          alert.classList.remove('hidden');
+          return;
+        }
+
+        localStorage.setItem('citaflow_token', data.data.token);
+        window.location.href = '/admin';
+      } catch (err) {
+        btn.disabled = false;
+        btn.innerHTML = 'Comenzar Ahora';
+        alert.textContent = 'Error al conectar con el servidor.';
+        alert.classList.remove('hidden');
+      }
+    }
+  </script>
+
+</body>
+</html>

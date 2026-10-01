@@ -1,0 +1,1664 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de Administración | CitaFlow</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .tab-active {
+      background-color: #4f46e5;
+      color: #ffffff;
+    }
+  </style>
+</head>
+<body class="bg-zinc-950 text-zinc-100 min-h-screen flex flex-col selection:bg-indigo-500 selection:text-white">
+
+  <!-- Top Navigation Bar -->
+  <header class="border-b border-zinc-800 bg-zinc-900/90 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <a href="/" class="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center font-bold text-white shadow-md shadow-indigo-600/30">C</a>
+        <div>
+          <span id="biz-header-name" class="font-bold text-sm sm:text-base text-white">CitaFlow Dashboard</span>
+          <div id="live-header-pill" class="hidden sm:flex items-center gap-1.5 px-2.5 py-0.5 text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-full">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span id="live-header-text">SSE En Vivo</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button onclick="openCalendarSyncModal()" class="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-semibold text-indigo-300 transition border border-zinc-700">
+          <span>🗓️ Sincronizar Calendario</span>
+        </button>
+        <a id="btn-public-link" href="#" target="_blank" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-semibold text-zinc-300 transition border border-zinc-700">
+          <span>🔗 Mi Página de Reserva</span>
+        </a>
+        <button onclick="openWalkInModal()" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white transition shadow-sm">
+          + Nueva Cita
+        </button>
+        <button onclick="logout()" class="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-rose-900/40 text-xs font-semibold text-zinc-400 hover:text-rose-300 transition border border-zinc-700">
+          Salir
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full flex-1">
+
+    <!-- KPI Summary Grid -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+      <div class="p-4 rounded-2xl bg-zinc-900 border border-zinc-800">
+        <div class="text-xs text-zinc-400 font-medium">Citas Hoy</div>
+        <div id="stat-today" class="text-2xl font-extrabold text-white mt-1">-</div>
+        <div class="text-[11px] text-zinc-500 mt-1">Agenda del día</div>
+      </div>
+      <div class="p-4 rounded-2xl bg-zinc-900 border border-zinc-800">
+        <div class="text-xs text-zinc-400 font-medium">Tasa de Confirmación</div>
+        <div id="stat-ratio" class="text-2xl font-extrabold text-emerald-400 mt-1">-</div>
+        <div class="text-[11px] text-emerald-500/80 mt-1">Ausentismo reducido</div>
+      </div>
+      <div class="p-4 rounded-2xl bg-zinc-900 border border-zinc-800">
+        <div class="text-xs text-zinc-400 font-medium">Citas Pendientes</div>
+        <div id="stat-pending" class="text-2xl font-extrabold text-amber-400 mt-1">-</div>
+        <div class="text-[11px] text-zinc-500 mt-1">Por confirmar por WhatsApp</div>
+      </div>
+      <div class="p-4 rounded-2xl bg-zinc-900 border border-zinc-800">
+        <div class="text-xs text-zinc-400 font-medium">Ingresos Totales</div>
+        <div id="stat-revenue" class="text-2xl font-extrabold text-indigo-400 mt-1">-</div>
+        <div class="text-[11px] text-zinc-500 mt-1">Comprobantes pagados</div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="flex items-center gap-2 overflow-x-auto pb-2 border-b border-zinc-800 mb-6">
+      <button onclick="switchTab('agenda')" id="tab-agenda" class="px-4 py-2 rounded-xl text-xs font-bold transition tab-active">
+        📅 Agenda & Citas
+      </button>
+      <button onclick="switchTab('live')" id="tab-live" class="relative px-4 py-2 rounded-xl text-xs font-bold text-zinc-400 hover:text-white bg-zinc-900 hover:bg-zinc-800 transition flex items-center gap-2">
+        <span class="relative flex h-2 w-2">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+        </span>
+        <span>🔴 Feed en Vivo</span>
+        <span id="live-badge-count" class="hidden px-1.5 py-0.2 rounded-full bg-emerald-500 text-[10px] font-extrabold text-zinc-950">0</span>
+      </button>
+      <button onclick="switchTab('services')" id="tab-services" class="px-4 py-2 rounded-xl text-xs font-bold text-zinc-400 hover:text-white bg-zinc-900 hover:bg-zinc-800 transition">
+        💈 Servicios
+      </button>
+      <button onclick="switchTab('staff')" id="tab-staff" class="px-4 py-2 rounded-xl text-xs font-bold text-zinc-400 hover:text-white bg-zinc-900 hover:bg-zinc-800 transition">
+        ✂️ Especialistas & Horarios
+      </button>
+      <button onclick="switchTab('receipts')" id="tab-receipts" class="px-4 py-2 rounded-xl text-xs font-bold text-zinc-400 hover:text-white bg-zinc-900 hover:bg-zinc-800 transition">
+        🧾 Comprobantes
+      </button>
+      <button onclick="switchTab('reminders')" id="tab-reminders" class="px-4 py-2 rounded-xl text-xs font-bold text-zinc-400 hover:text-white bg-zinc-900 hover:bg-zinc-800 transition">
+        📲 Automatización WhatsApp
+      </button>
+    </div>
+
+    <!-- Global Alert Banner -->
+    <div id="admin-alert" class="hidden mb-6 p-4 rounded-xl text-sm flex items-center justify-between">
+      <div id="admin-alert-text"></div>
+      <button onclick="hideAlert()" class="text-xs opacity-70 hover:opacity-100">✕</button>
+    </div>
+
+    <!-- TAB 1: Agenda & Appointments -->
+    <section id="view-agenda" class="space-y-4">
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-zinc-900 p-4 rounded-2xl border border-zinc-800">
+        <div class="flex flex-wrap items-center gap-2">
+          <label class="text-xs text-zinc-400 font-semibold">Fecha:</label>
+          <input type="date" id="filter-date" onchange="loadAppointments()" class="bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-1.5 text-xs text-white" />
+          <button onclick="setDateToday()" class="px-2.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-semibold text-zinc-300">Hoy</button>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <select id="filter-staff" onchange="loadAppointments()" class="bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-1.5 text-xs text-white">
+            <option value="all">Todos los Especialistas</option>
+          </select>
+          <select id="filter-status" onchange="loadAppointments()" class="bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-1.5 text-xs text-white">
+            <option value="all">Todos los Estados</option>
+            <option value="CONFIRMED">CONFIRMADAS</option>
+            <option value="PENDING">PENDIENTES</option>
+            <option value="COMPLETED">COMPLETADAS</option>
+            <option value="CANCELLED">CANCELADAS</option>
+          </select>
+          <button onclick="loadAppointments()" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white">↻ Actualizar</button>
+        </div>
+      </div>
+
+      <!-- Appointments List Table -->
+      <div class="bg-zinc-900 rounded-2xl border border-zinc-800 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-zinc-950/60 text-zinc-400 border-b border-zinc-800 uppercase tracking-wider font-semibold">
+              <tr>
+                <th class="py-3 px-4">Hora</th>
+                <th class="py-3 px-4">Cliente</th>
+                <th class="py-3 px-4">Servicio</th>
+                <th class="py-3 px-4">Especialista</th>
+                <th class="py-3 px-4">Estado</th>
+                <th class="py-3 px-4 text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="appointments-tbody" class="divide-y divide-zinc-800/60 text-zinc-200">
+              <tr>
+                <td colspan="6" class="py-8 text-center text-zinc-500">Cargando agenda de citas...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB: Feed de Citas en Vivo (Real-Time SSE) -->
+    <section id="view-live" class="hidden space-y-4">
+      <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 shadow-xl">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="relative flex h-3 w-3">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+              </span>
+              <h2 class="text-lg font-bold text-white">Feed de Citas en Vivo</h2>
+              <span id="live-connection-tag" class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                🟢 SSE Conectado
+              </span>
+            </div>
+            <p class="text-xs text-zinc-400 mt-1 max-w-2xl leading-relaxed">
+              Monitoreo continuo de reservas entrantes y cambios de estado en tiempo real. No requiere filtrar por fecha ni recargar la página.
+            </p>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <button onclick="toggleLiveSound()" id="btn-live-sound" class="px-3 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-semibold text-zinc-300 transition flex items-center gap-1.5 border border-zinc-700">
+              <span id="live-sound-icon">🔔</span>
+              <span id="live-sound-label">Sonido: ON</span>
+            </button>
+            <button onclick="simulateIncomingBooking()" id="btn-simulate-booking" class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-xs font-bold text-white transition flex items-center gap-1.5 shadow-md shadow-indigo-600/20">
+              <span>⚡ Simular Reserva Entrante</span>
+            </button>
+            <button onclick="clearLiveVisualFeed()" class="px-3 py-1.5 rounded-xl bg-zinc-800/80 hover:bg-zinc-800 text-xs font-medium text-zinc-400 hover:text-zinc-200 transition">
+              Limpiar Vista
+            </button>
+          </div>
+        </div>
+
+        <!-- Live metrics bar -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 pt-4 border-t border-zinc-800/70 text-xs">
+          <div class="bg-zinc-950/60 p-3 rounded-xl border border-zinc-800/60">
+            <span class="text-zinc-500 block text-[11px]">Nuevas en esta sesión</span>
+            <span id="live-stat-session" class="text-lg font-extrabold text-emerald-400">0</span>
+          </div>
+          <div class="bg-zinc-950/60 p-3 rounded-xl border border-zinc-800/60">
+            <span class="text-zinc-500 block text-[11px]">Última actividad</span>
+            <span id="live-stat-last-time" class="text-xs font-mono font-medium text-white">Esperando evento...</span>
+          </div>
+          <div class="bg-zinc-950/60 p-3 rounded-xl border border-zinc-800/60">
+            <span class="text-zinc-500 block text-[11px]">Canal SSE</span>
+            <span id="live-stat-net" class="text-xs font-bold text-emerald-400">Conectado y Escuchando</span>
+          </div>
+          <div class="bg-zinc-950/60 p-3 rounded-xl border border-zinc-800/60">
+            <span class="text-zinc-500 block text-[11px]">Reservas recientes en feed</span>
+            <span id="live-stat-total" class="text-lg font-extrabold text-indigo-400">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feed Container -->
+      <div id="live-feed-list" class="space-y-3">
+        <!-- Cards inserted dynamically -->
+      </div>
+    </section>
+
+    <!-- TAB 2: Services CRUD -->
+    <section id="view-services" class="hidden space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-bold text-white">Catálogo de Servicios</h2>
+          <p class="text-xs text-zinc-400">Configura nombres, duración y precios.</p>
+        </div>
+        <button onclick="openServiceModal()" class="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white">
+          + Agregar Servicio
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="services-cards-grid">
+        <!-- Loaded dynamically -->
+      </div>
+    </section>
+
+    <!-- TAB 3: Staff CRUD -->
+    <section id="view-staff" class="hidden space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-bold text-white">Equipo & Horarios de Trabajo</h2>
+          <p class="text-xs text-zinc-400">Administra turnos y descansos de cada especialista.</p>
+        </div>
+        <button onclick="openStaffModal()" class="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white">
+          + Agregar Especialista
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="staff-cards-grid">
+        <!-- Loaded dynamically -->
+      </div>
+    </section>
+
+    <!-- TAB 4: Receipts -->
+    <section id="view-receipts" class="hidden space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-bold text-white">Comprobantes de Pago Emitidos</h2>
+          <p class="text-xs text-zinc-400">Historial de recibos 3NF y transacciones registradas.</p>
+        </div>
+      </div>
+
+      <div class="bg-zinc-900 rounded-2xl border border-zinc-800 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-zinc-950/60 text-zinc-400 border-b border-zinc-800 uppercase tracking-wider font-semibold">
+              <tr>
+                <th class="py-3 px-4">Nº Recibo</th>
+                <th class="py-3 px-4">Fecha Emisión</th>
+                <th class="py-3 px-4">Cliente</th>
+                <th class="py-3 px-4">Servicio</th>
+                <th class="py-3 px-4">Método</th>
+                <th class="py-3 px-4">Total</th>
+                <th class="py-3 px-4 text-right">Comprobante</th>
+              </tr>
+            </thead>
+            <tbody id="receipts-tbody" class="divide-y divide-zinc-800/60 text-zinc-200">
+              <!-- Loaded dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: Reminders Automation & WhatsApp Cloud API -->
+    <section id="view-reminders" class="hidden space-y-6">
+      
+      <!-- WhatsApp Engine Status & Webhook Configuration -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="p-5 rounded-2xl bg-zinc-900 border border-zinc-800">
+          <div class="text-xs text-zinc-400 font-semibold mb-1">Proveedor Activo</div>
+          <div id="wa-provider-badge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 mt-1">
+            <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
+            <span id="wa-provider-text">MOCK (Simulador Local)</span>
+          </div>
+          <p class="text-[11px] text-zinc-400 mt-2 leading-relaxed">
+            Permite probar el flujo completo sin costo. Para producción, configura <code class="text-zinc-200">WHATSAPP_PROVIDER=cloud_api</code> en tu archivo <code class="text-zinc-200">.env</code>.
+          </p>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-zinc-900 border border-zinc-800 md:col-span-2">
+          <div class="text-xs text-zinc-400 font-semibold mb-1">Webhook de Meta Graph API (WhatsApp Cloud)</div>
+          <div class="space-y-1.5 text-xs text-zinc-300 font-mono mt-2">
+            <div><span class="text-zinc-500">URL Callback:</span> <span id="wa-webhook-url" class="text-indigo-400 font-bold">http://localhost:3000/api/webhook/whatsapp</span></div>
+            <div><span class="text-zinc-500">Verify Token:</span> <span class="text-emerald-400">citaflow_meta_verify_token_2026</span></div>
+            <div><span class="text-zinc-500">Campos suscritos:</span> <span class="text-zinc-200">messages</span></div>
+          </div>
+          <p class="text-[11px] text-zinc-500 mt-2">
+            Copia estos datos directamente en el panel de Desarrolladores de Meta (Meta for Developers > WhatsApp > Configuración).
+          </p>
+        </div>
+      </div>
+
+      <!-- Automated Cron Box -->
+      <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+              <span>🤖 Automatización de Recordatorios 24h</span>
+              <span class="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[11px]">Activo cada 1h</span>
+            </h3>
+            <p class="text-xs text-zinc-400 mt-1 max-w-2xl leading-relaxed">
+              El motor en segundo plano escanea automáticamente citas pendientes que inician en 24 horas y envía el mensaje interactivo con botones para que el cliente confirme o libere el turno.
+            </p>
+          </div>
+          <button onclick="triggerAutomatedReminders()" id="btn-trigger-cron" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition shadow-md shadow-emerald-600/20 whitespace-nowrap">
+            ⚡ Ejecutar Escaneo Manual Ahora
+          </button>
+        </div>
+
+        <div id="cron-result-box" class="hidden mt-6 p-4 rounded-xl bg-zinc-950 border border-zinc-800 text-xs">
+          <div class="font-bold text-emerald-400 mb-2">Resultado del Escaneo:</div>
+          <div id="cron-result-content" class="text-zinc-300 space-y-2"></div>
+        </div>
+      </div>
+
+      <!-- Interactive Webhook Simulator (Test incoming WhatsApp customer replies) -->
+      <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
+        <h3 class="text-base font-bold text-white mb-1 flex items-center gap-2">
+          <span>📲 Simulador de Webhook de WhatsApp (Interacción de Cliente)</span>
+        </h3>
+        <p class="text-xs text-zinc-400 mb-4">
+          Prueba en vivo cómo reacciona CitaFlow cuando un cliente toca los botones interactivos de WhatsApp desde su teléfono.
+        </p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-semibold text-zinc-400 mb-1">Seleccionar Cita a interactuar:</label>
+            <select id="sim-appointment-select" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white">
+              <option value="">Cargando citas disponibles...</option>
+            </select>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="simulateWebhook('CONFIRM')" class="flex-1 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition shadow-sm">
+              ✓ Botón Confirmar
+            </button>
+            <button onclick="simulateWebhook('CANCEL')" class="flex-1 py-2 px-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition shadow-sm">
+              ✕ Botón Cancelar
+            </button>
+          </div>
+        </div>
+
+        <div id="sim-result-box" class="hidden mt-4 p-4 rounded-xl bg-zinc-950 border border-zinc-800 text-xs">
+          <div class="font-bold text-indigo-400 mb-1">Respuesta del Webhook en Vivo:</div>
+          <div id="sim-result-content" class="text-zinc-300 font-mono text-[11px]"></div>
+        </div>
+      </div>
+
+      <!-- Outgoing WhatsApp Messages Audit Log -->
+      <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h3 class="text-base font-bold text-white">Registro de Envíos WhatsApp Recientes</h3>
+            <p class="text-xs text-zinc-400">Historial de mensajes emitidos en segundo plano.</p>
+          </div>
+          <button onclick="loadWhatsAppStatus()" class="text-xs text-indigo-400 hover:underline">↻ Refrescar Registro</button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-zinc-950/60 text-zinc-400 border-b border-zinc-800 uppercase tracking-wider font-semibold">
+              <tr>
+                <th class="py-2.5 px-3">Fecha</th>
+                <th class="py-2.5 px-3">Destinatario</th>
+                <th class="py-2.5 px-3">Mensaje</th>
+                <th class="py-2.5 px-3">Proveedor</th>
+                <th class="py-2.5 px-3">Estado</th>
+              </tr>
+            </thead>
+            <tbody id="wa-log-tbody" class="divide-y divide-zinc-800/60 text-zinc-200">
+              <tr>
+                <td colspan="5" class="py-6 text-center text-zinc-500">Cargando registro de mensajes...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <!-- MODAL: Walk-in / New Appointment -->
+  <div id="modal-walkin" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-zinc-900 border border-zinc-800 rounded-3xl max-w-lg w-full p-6 text-zinc-100 shadow-2xl">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-bold text-white">Agendar Nueva Cita (Recepción)</h3>
+        <button onclick="closeModal('modal-walkin')" class="text-zinc-400 hover:text-white">✕</button>
+      </div>
+      <form onsubmit="submitWalkIn(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block text-zinc-400 font-semibold mb-1">Servicio *</label>
+          <select id="walkin-service" required class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-white"></select>
+        </div>
+        <div>
+          <label class="block text-zinc-400 font-semibold mb-1">Especialista *</label>
+          <select id="walkin-staff" required class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-white"></select>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-zinc-400 font-semibold mb-1">Fecha *</label>
+            <input type="date" id="walkin-date" required class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-white" />
+          </div>
+          <div>
+            <label class="block text-zinc-400 font-semibold mb-1">Hora Inicio *</label>
+            <input type="time" id="walkin-time" required class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-white" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-zinc-400 font-semibold mb-1">Nombre del Cliente *</label>
+          <input type="text" id="walkin-name" required placeholder="Ej: Marcos Ramos" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-white" />
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-zinc-400 font-semibold mb-1">WhatsApp / Teléfono *</label>
+            <input type="tel" id="walkin-phone" required placeholder="+34 600..." class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-white" />
+          </div>
+          <div>
+            <label class="block text-zinc-400 font-semibold mb-1">Email (Opcional)</label>
+            <input type="email" id="walkin-email" placeholder="cliente@..." class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-white" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-zinc-400 font-semibold mb-1">Notas</label>
+          <input type="text" id="walkin-notes" placeholder="Walk-in o detalles..." class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-white" />
+        </div>
+        <div class="flex gap-2 pt-3">
+          <button type="button" onclick="closeModal('modal-walkin')" class="flex-1 py-2.5 rounded-xl bg-zinc-800 text-zinc-300">Cancelar</button>
+          <button type="submit" class="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 font-bold text-white">Guardar Cita</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Issue Receipt -->
+  <div id="modal-receipt" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-zinc-900 border border-zinc-800 rounded-3xl max-w-md w-full p-6 text-zinc-100 shadow-2xl">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-bold text-white">Emitir Comprobante de Pago</h3>
+        <button onclick="closeModal('modal-receipt')" class="text-zinc-400 hover:text-white">✕</button>
+      </div>
+      <form onsubmit="submitIssueReceipt(event)" class="space-y-4 text-xs">
+        <input type="hidden" id="receipt-apt-id" />
+        <div class="p-3 bg-zinc-950 rounded-xl border border-zinc-800">
+          <div class="text-zinc-400">Cliente: <strong id="receipt-modal-client" class="text-white"></strong></div>
+          <div class="text-zinc-400 mt-1">Servicio: <strong id="receipt-modal-service" class="text-white"></strong></div>
+        </div>
+        <div>
+          <label class="block text-zinc-400 font-semibold mb-1">Monto Total *</label>
+          <input type="number" step="0.01" id="receipt-modal-amount" required class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-white text-base font-bold text-emerald-400" />
+        </div>
+        <div>
+          <label class="block text-zinc-400 font-semibold mb-1">Método de Pago *</label>
+          <select id="receipt-modal-method" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-white">
+            <option value="CASH">Efectivo</option>
+            <option value="TRANSFER">Transferencia Bancaria / Bizum</option>
+            <option value="CARD">Tarjeta de Crédito / Débito</option>
+          </select>
+        </div>
+        <div class="flex gap-2 pt-2">
+          <button type="button" onclick="closeModal('modal-receipt')" class="flex-1 py-2.5 rounded-xl bg-zinc-800 text-zinc-300">Cancelar</button>
+          <button type="submit" class="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-bold text-white">Cobrar y Emitir</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Service Create/Edit -->
+  <div id="modal-service" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-zinc-900 border border-zinc-800 rounded-3xl max-w-md w-full p-6 text-zinc-100 shadow-2xl">
+      <div class="flex justify-between items-center mb-4">
+        <h3 id="modal-service-title" class="text-lg font-bold text-white">Servicio</h3>
+        <button onclick="closeModal('modal-service')" class="text-zinc-400 hover:text-white">✕</button>
+      </div>
+      <form onsubmit="submitService(event)" class="space-y-3 text-xs">
+        <input type="hidden" id="service-id" />
+        <div>
+          <label class="block text-zinc-400 font-semibold mb-1">Nombre del Servicio *</label>
+          <input type="text" id="service-name" required placeholder="Ej: Corte Degradado + Lavado" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-white" />
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-zinc-400 font-semibold mb-1">Duración (Minutos) *</label>
+            <input type="number" id="service-duration" required min="5" step="5" value="45" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-white" />
+          </div>
+          <div>
+            <label class="block text-zinc-400 font-semibold mb-1">Precio *</label>
+            <input type="number" id="service-price" required min="0" step="0.5" value="18.00" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-white" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-zinc-400 font-semibold mb-1">Descripción</label>
+          <textarea id="service-desc" rows="2" placeholder="Detalle del servicio..." class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-white"></textarea>
+        </div>
+        <div class="flex gap-2 pt-3">
+          <button type="button" onclick="closeModal('modal-service')" class="flex-1 py-2.5 rounded-xl bg-zinc-800 text-zinc-300">Cancelar</button>
+          <button type="submit" class="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 font-bold text-white">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Staff Create/Edit -->
+  <div id="modal-staff" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-zinc-900 border border-zinc-800 rounded-3xl max-w-md w-full p-6 text-zinc-100 shadow-2xl">
+      <div class="flex justify-between items-center mb-4">
+        <h3 id="modal-staff-title" class="text-lg font-bold text-white">Especialista</h3>
+        <button onclick="closeModal('modal-staff')" class="text-zinc-400 hover:text-white">✕</button>
+      </div>
+      <form onsubmit="submitStaff(event)" class="space-y-3 text-xs">
+        <input type="hidden" id="staff-id" />
+        <div>
+          <label class="block text-zinc-400 font-semibold mb-1">Nombre Completo *</label>
+          <input type="text" id="staff-name" required placeholder="Ej: Carlos Mendoza" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-white" />
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-zinc-400 font-semibold mb-1">Email</label>
+            <input type="email" id="staff-email" placeholder="carlos@..." class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-white" />
+          </div>
+          <div>
+            <label class="block text-zinc-400 font-semibold mb-1">Teléfono</label>
+            <input type="tel" id="staff-phone" placeholder="+34..." class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-white" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-zinc-400 font-semibold mb-1">URL Avatar / Foto (Opcional)</label>
+          <input type="url" id="staff-avatar" placeholder="https://..." class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-white" />
+        </div>
+        <div class="flex gap-2 pt-3">
+          <button type="button" onclick="closeModal('modal-staff')" class="flex-1 py-2.5 rounded-xl bg-zinc-800 text-zinc-300">Cancelar</button>
+          <button type="submit" class="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 font-bold text-white">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Google Calendar Live Sync & Subscription Feed -->
+  <div id="modal-calendar-sync" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-zinc-900 border border-zinc-800 rounded-3xl max-w-lg w-full p-6 text-zinc-100 shadow-2xl space-y-4">
+      <div class="flex justify-between items-center">
+        <h3 class="text-lg font-bold text-white flex items-center gap-2">
+          <span>🗓️ Sincronización con Google Calendar</span>
+        </h3>
+        <button onclick="closeModal('modal-calendar-sync')" class="text-zinc-400 hover:text-white">✕</button>
+      </div>
+
+      <p class="text-xs text-zinc-400 leading-relaxed">
+        Sincroniza automáticamente la agenda de tu negocio o de cada barbero con tu teléfono (Google Calendar, iPhone Calendar u Outlook) mediante un feed en vivo que se actualiza en tiempo real.
+      </p>
+
+      <div class="bg-zinc-950 p-4 rounded-2xl border border-zinc-800 space-y-2">
+        <label class="block text-xs font-semibold text-zinc-300">Enlace de Suscripción en Vivo (.ics):</label>
+        <div class="flex gap-2">
+          <input type="text" id="cal-feed-url" readonly class="flex-1 bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-indigo-300 font-mono" />
+          <button onclick="copyCalendarFeed()" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl transition">
+            Copiar
+          </button>
+        </div>
+        <p class="text-[11px] text-zinc-500">Cualquier cita reservada, confirmada o cancelada en CitaFlow se reflejará automáticamente en tu calendario.</p>
+      </div>
+
+      <div class="space-y-2 text-xs text-zinc-300 bg-zinc-950/40 p-3.5 rounded-xl border border-zinc-800/80">
+        <div class="font-bold text-white text-xs">Instrucciones rápidas de conexión:</div>
+        <div class="text-[11px] space-y-1 text-zinc-400">
+          <div>• <strong>Google Calendar (Web / Android):</strong> En la barra lateral izquierda, haz clic en el signo <code>+</code> junto a "Otros calendarios" > "Desde URL" > Pega el enlace copiado.</div>
+          <div>• <strong>iPhone / Apple Calendar:</strong> Abre Calendario > Añadir suscripción de calendario > Pega el enlace > Define actualización cada 15 min.</div>
+        </div>
+      </div>
+
+      <div class="pt-2 flex gap-2">
+        <a id="btn-open-gcal" target="_blank" href="#" class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold text-xs text-center transition shadow-md">
+          Abrir en Google Calendar Web →
+        </a>
+        <button onclick="closeModal('modal-calendar-sync')" class="px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('citaflow_token');
+    let currentBusiness = null;
+    let servicesCache = [];
+    let staffCache = [];
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      if (!token) {
+        window.location.href = '/login';
+        return;
+      }
+
+      setDateToday();
+      await fetchBusinessProfile();
+      await loadDashboardSummary();
+      await loadServices();
+      await loadStaff();
+      await loadAppointments();
+      initLiveFeedSSE();
+      loadLiveHistory();
+    });
+
+    function setDateToday() {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('filter-date').value = today;
+    }
+
+    async function apiFetch(endpoint, options = {}) {
+      const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+        ...options.headers,
+      };
+
+      const res = await fetch(endpoint, { ...options, headers });
+      if (res.status === 401 || res.status === 403) {
+        localStorage.removeItem('citaflow_token');
+        window.location.href = '/login';
+        return null;
+      }
+      return res.json();
+    }
+
+    function showAlert(text, type = 'success') {
+      const banner = document.getElementById('admin-alert');
+      const textEl = document.getElementById('admin-alert-text');
+      banner.className = `mb-6 p-4 rounded-xl text-sm flex items-center justify-between ${
+        type === 'success' ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-300' : 'bg-rose-500/10 border border-rose-500/20 text-rose-300'
+      }`;
+      textEl.textContent = text;
+      banner.classList.remove('hidden');
+    }
+
+    function hideAlert() {
+      document.getElementById('admin-alert').classList.add('hidden');
+    }
+
+    async function fetchBusinessProfile() {
+      const data = await apiFetch('/api/auth/me');
+      if (data && data.success) {
+        currentBusiness = data.data;
+        document.getElementById('biz-header-name').textContent = currentBusiness.name;
+        document.getElementById('btn-public-link').href = `/b/${currentBusiness.slug}`;
+      }
+    }
+
+    async function loadDashboardSummary() {
+      const data = await apiFetch('/api/admin/appointments/summary');
+      if (data && data.success) {
+        const stats = data.data;
+        const sym = stats.currency === 'EUR' ? '€' : '$';
+        document.getElementById('stat-today').textContent = stats.todayCount;
+        document.getElementById('stat-ratio').textContent = `${stats.confirmedRatio}%`;
+        document.getElementById('stat-pending').textContent = stats.pendingCount;
+        document.getElementById('stat-revenue').textContent = `${sym}${stats.totalRevenue.toFixed(2)}`;
+      }
+    }
+
+    async function loadAppointments() {
+      const date = document.getElementById('filter-date').value;
+      const staffId = document.getElementById('filter-staff').value;
+      const status = document.getElementById('filter-status').value;
+
+      const params = new URLSearchParams();
+      if (date) params.append('date', date);
+      if (staffId && staffId !== 'all') params.append('staffId', staffId);
+      if (status && status !== 'all') params.append('status', status);
+
+      const tbody = document.getElementById('appointments-tbody');
+      tbody.innerHTML = '<tr><td colspan="6" class="py-6 text-center text-zinc-500">Actualizando...</td></tr>';
+
+      const data = await apiFetch(`/api/admin/appointments?${params.toString()}`);
+      if (!data || !data.success) return;
+
+      const apts = data.data;
+      if (apts.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="py-8 text-center text-zinc-500">No hay citas registradas para este filtro.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = apts.map(apt => {
+        const startTime = new Date(apt.start_time).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: false });
+        const endTime = new Date(apt.end_time).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: false });
+
+        let statusBadge = '';
+        if (apt.status === 'CONFIRMED') statusBadge = '<span class="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold text-[11px]">CONFIRMADA</span>';
+        else if (apt.status === 'PENDING') statusBadge = '<span class="px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 font-semibold text-[11px]">PENDIENTE</span>';
+        else if (apt.status === 'COMPLETED') statusBadge = '<span class="px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 font-semibold text-[11px]">COMPLETADA</span>';
+        else if (apt.status === 'CANCELLED') statusBadge = '<span class="px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 font-semibold text-[11px]">CANCELADA</span>';
+
+        return `
+          <tr class="hover:bg-zinc-800/40 transition">
+            <td class="py-3 px-4 font-mono font-bold text-white">${startTime} - ${endTime}</td>
+            <td class="py-3 px-4">
+              <div class="font-bold text-white">${apt.client_name}</div>
+              <div class="text-[11px] text-zinc-400">${apt.client_phone}</div>
+            </td>
+            <td class="py-3 px-4">
+              <div class="font-medium text-white">${apt.service?.name}</div>
+              <div class="text-[11px] text-emerald-400 font-semibold">${apt.service?.price.toFixed(2)} ${currentBusiness?.currency || 'USD'}</div>
+            </td>
+            <td class="py-3 px-4 font-medium text-zinc-300">${apt.staff?.name}</td>
+            <td class="py-3 px-4">${statusBadge}</td>
+            <td class="py-3 px-4 text-right space-x-1">
+              ${apt.status !== 'COMPLETED' && apt.status !== 'CANCELLED' ? `
+                <button onclick="changeStatus('${apt.id}', 'CONFIRMED')" title="Marcar Confirmada" class="px-2 py-1 rounded bg-zinc-800 hover:bg-emerald-900/50 text-emerald-300 font-semibold text-[11px]">✓</button>
+                <button onclick="openReceiptModal('${apt.id}', '${apt.client_name}', '${apt.service?.name}', ${apt.service?.price})" title="Cobrar / Emitir Recibo" class="px-2 py-1 rounded bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 font-semibold text-[11px]">🧾 Cobrar</button>
+              ` : ''}
+              ${apt.receipt ? `
+                <a href="/receipt/${apt.id}?token=${apt.confirmation_token}&admin_token=${token}" target="_blank" class="px-2 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-semibold text-[11px]">Ver Recibo</a>
+              ` : ''}
+              <button onclick="sendDirectReminder('${apt.id}')" title="Enviar Recordatorio WhatsApp" class="px-2 py-1 rounded bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-300 text-[11px]">📲</button>
+              ${apt.status !== 'CANCELLED' ? `
+                <button onclick="changeStatus('${apt.id}', 'CANCELLED')" title="Cancelar" class="px-2 py-1 rounded bg-zinc-800 hover:bg-rose-900/50 text-rose-300 text-[11px]">✕</button>
+              ` : ''}
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function changeStatus(id, newStatus) {
+      const data = await apiFetch(`/api/admin/appointments/${id}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (data && data.success) {
+        showAlert(data.message);
+        loadAppointments();
+        loadDashboardSummary();
+      } else {
+        showAlert(data.message || 'Error al cambiar estado.', 'error');
+      }
+    }
+
+    async function sendDirectReminder(appointmentId) {
+      const data = await apiFetch(`/api/admin/reminders/send/${appointmentId}`, { method: 'POST' });
+      if (data && data.success) {
+        showAlert('Recordatorio generado. Abriendo WhatsApp...');
+        window.open(data.data.waLink, '_blank');
+      } else {
+        showAlert(data.message || 'Error al generar recordatorio', 'error');
+      }
+    }
+
+    // Services CRUD
+    async function loadServices() {
+      const data = await apiFetch('/api/admin/services');
+      if (!data || !data.success) return;
+      servicesCache = data.data;
+
+      // Populate walk-in dropdown
+      const walkinSelect = document.getElementById('walkin-service');
+      walkinSelect.innerHTML = servicesCache.map(s => `<option value="${s.id}">${s.name} (${s.duration_minutes} min - $${s.price.toFixed(2)})</option>`).join('');
+
+      const grid = document.getElementById('services-cards-grid');
+      grid.innerHTML = servicesCache.map(s => `
+        <div class="p-4 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-start justify-between">
+          <div>
+            <h4 class="font-bold text-white text-sm">${s.name}</h4>
+            <div class="text-xs text-zinc-400 mt-1">${s.description || 'Sin descripción'}</div>
+            <div class="flex items-center gap-3 mt-3">
+              <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300">⏱ ${s.duration_minutes} min</span>
+              <span class="text-sm font-extrabold text-emerald-400">$${s.price.toFixed(2)}</span>
+            </div>
+          </div>
+          <div class="flex gap-1">
+            <button onclick="editService('${s.id}')" class="px-2 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs">Editar</button>
+            <button onclick="deleteService('${s.id}')" class="px-2 py-1 rounded bg-zinc-800 hover:bg-rose-900/50 text-rose-300 text-xs">Eliminar</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function openServiceModal() {
+      document.getElementById('modal-service-title').textContent = 'Crear Nuevo Servicio';
+      document.getElementById('service-id').value = '';
+      document.getElementById('service-name').value = '';
+      document.getElementById('service-duration').value = 45;
+      document.getElementById('service-price').value = 18;
+      document.getElementById('service-desc').value = '';
+      openModal('modal-service');
+    }
+
+    function editService(id) {
+      const svc = servicesCache.find(s => s.id === id);
+      if (!svc) return;
+      document.getElementById('modal-service-title').textContent = 'Editar Servicio';
+      document.getElementById('service-id').value = svc.id;
+      document.getElementById('service-name').value = svc.name;
+      document.getElementById('service-duration').value = svc.duration_minutes;
+      document.getElementById('service-price').value = svc.price;
+      document.getElementById('service-desc').value = svc.description || '';
+      openModal('modal-service');
+    }
+
+    async function submitService(e) {
+      e.preventDefault();
+      const id = document.getElementById('service-id').value;
+      const payload = {
+        name: document.getElementById('service-name').value,
+        duration_minutes: parseInt(document.getElementById('service-duration').value),
+        price: parseFloat(document.getElementById('service-price').value),
+        description: document.getElementById('service-desc').value,
+      };
+
+      const endpoint = id ? `/api/admin/services/${id}` : '/api/admin/services';
+      const method = id ? 'PUT' : 'POST';
+
+      const data = await apiFetch(endpoint, { method, body: JSON.stringify(payload) });
+      if (data && data.success) {
+        closeModal('modal-service');
+        showAlert(data.message);
+        loadServices();
+      } else {
+        showAlert(data.message || 'Error guardando servicio', 'error');
+      }
+    }
+
+    async function deleteService(id) {
+      if (!confirm('¿Seguro que deseas eliminar este servicio?')) return;
+      const data = await apiFetch(`/api/admin/services/${id}`, { method: 'DELETE' });
+      if (data && data.success) {
+        showAlert(data.message);
+        loadServices();
+      } else {
+        showAlert(data.message || 'Error al eliminar', 'error');
+      }
+    }
+
+    // Staff CRUD
+    async function loadStaff() {
+      const data = await apiFetch('/api/admin/staff');
+      if (!data || !data.success) return;
+      staffCache = data.data;
+
+      // Populate filter and walkin staff selects
+      const filterSelect = document.getElementById('filter-staff');
+      filterSelect.innerHTML = '<option value="all">Todos los Especialistas</option>' + 
+        staffCache.map(st => `<option value="${st.id}">${st.name}</option>`).join('');
+
+      const walkinSelect = document.getElementById('walkin-staff');
+      walkinSelect.innerHTML = staffCache.map(st => `<option value="${st.id}">${st.name}</option>`).join('');
+
+      const grid = document.getElementById('staff-cards-grid');
+      grid.innerHTML = staffCache.map(st => `
+        <div class="p-4 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-start gap-4">
+          <img src="${st.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80'}" class="w-12 h-12 rounded-xl object-cover border border-zinc-700" />
+          <div class="flex-1">
+            <h4 class="font-bold text-white text-sm">${st.name}</h4>
+            <div class="text-xs text-zinc-400">${st.phone || st.email || 'Horario estándar Lun-Sáb'}</div>
+            <div class="text-[11px] text-indigo-400 mt-2 font-mono">09:00 - 19:00 (Comida: 14:00 - 15:00)</div>
+          </div>
+          <div class="flex gap-1">
+            <button onclick="editStaff('${st.id}')" class="px-2 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs">Editar</button>
+            <button onclick="deleteStaff('${st.id}')" class="px-2 py-1 rounded bg-zinc-800 hover:bg-rose-900/50 text-rose-300 text-xs">✕</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function openStaffModal() {
+      document.getElementById('modal-staff-title').textContent = 'Nuevo Especialista';
+      document.getElementById('staff-id').value = '';
+      document.getElementById('staff-name').value = '';
+      document.getElementById('staff-email').value = '';
+      document.getElementById('staff-phone').value = '';
+      document.getElementById('staff-avatar').value = '';
+      openModal('modal-staff');
+    }
+
+    function editStaff(id) {
+      const st = staffCache.find(s => s.id === id);
+      if (!st) return;
+      document.getElementById('modal-staff-title').textContent = 'Editar Especialista';
+      document.getElementById('staff-id').value = st.id;
+      document.getElementById('staff-name').value = st.name;
+      document.getElementById('staff-email').value = st.email || '';
+      document.getElementById('staff-phone').value = st.phone || '';
+      document.getElementById('staff-avatar').value = st.avatar_url || '';
+      openModal('modal-staff');
+    }
+
+    async function submitStaff(e) {
+      e.preventDefault();
+      const id = document.getElementById('staff-id').value;
+      const payload = {
+        name: document.getElementById('staff-name').value,
+        email: document.getElementById('staff-email').value,
+        phone: document.getElementById('staff-phone').value,
+        avatar_url: document.getElementById('staff-avatar').value,
+      };
+
+      const endpoint = id ? `/api/admin/staff/${id}` : '/api/admin/staff';
+      const method = id ? 'PUT' : 'POST';
+
+      const data = await apiFetch(endpoint, { method, body: JSON.stringify(payload) });
+      if (data && data.success) {
+        closeModal('modal-staff');
+        showAlert(data.message);
+        loadStaff();
+      } else {
+        showAlert(data.message || 'Error guardando especialista', 'error');
+      }
+    }
+
+    async function deleteStaff(id) {
+      if (!confirm('¿Seguro que deseas eliminar este especialista?')) return;
+      const data = await apiFetch(`/api/admin/staff/${id}`, { method: 'DELETE' });
+      if (data && data.success) {
+        showAlert(data.message);
+        loadStaff();
+      } else {
+        showAlert(data.message || 'Error al eliminar', 'error');
+      }
+    }
+
+    // Receipts
+    async function loadReceipts() {
+      const data = await apiFetch('/api/admin/receipts');
+      if (!data || !data.success) return;
+
+      const tbody = document.getElementById('receipts-tbody');
+      const receipts = data.data;
+
+      if (receipts.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="py-8 text-center text-zinc-500">Aún no se han emitido comprobantes de pago.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = receipts.map(r => {
+        const issued = new Date(r.issued_at).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' });
+        return `
+          <tr class="hover:bg-zinc-800/40 transition">
+            <td class="py-3 px-4 font-mono font-bold text-indigo-400">${r.receipt_number}</td>
+            <td class="py-3 px-4 text-zinc-400">${issued}</td>
+            <td class="py-3 px-4 font-bold text-white">${r.appointment?.client_name}</td>
+            <td class="py-3 px-4 text-zinc-300">${r.appointment?.service?.name}</td>
+            <td class="py-3 px-4"><span class="px-2 py-0.5 rounded bg-zinc-800 text-[11px] font-semibold">${r.payment_method}</span></td>
+            <td class="py-3 px-4 font-bold text-emerald-400">$${r.total_amount.toFixed(2)}</td>
+            <td class="py-3 px-4 text-right">
+              <a href="/receipt/${r.appointment_id}?token=${r.appointment?.confirmation_token || ''}&admin_token=${token}" target="_blank" class="px-3 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white font-semibold text-xs transition">
+                🖨️ Imprimir / PDF
+              </a>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function openReceiptModal(aptId, clientName, serviceName, price) {
+      document.getElementById('receipt-apt-id').value = aptId;
+      document.getElementById('receipt-modal-client').textContent = clientName;
+      document.getElementById('receipt-modal-service').textContent = serviceName;
+      document.getElementById('receipt-modal-amount').value = price;
+      openModal('modal-receipt');
+    }
+
+    async function submitIssueReceipt(e) {
+      e.preventDefault();
+      const payload = {
+        appointmentId: document.getElementById('receipt-apt-id').value,
+        totalAmount: parseFloat(document.getElementById('receipt-modal-amount').value),
+        paymentMethod: document.getElementById('receipt-modal-method').value,
+      };
+
+      const data = await apiFetch('/api/admin/receipts/issue', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+
+      if (data && data.success) {
+        closeModal('modal-receipt');
+        showAlert(data.message);
+        loadAppointments();
+        loadDashboardSummary();
+        loadReceipts();
+        window.open(`/receipt/${payload.appointmentId}?admin_token=${token}`, '_blank');
+      } else {
+        showAlert(data.message || 'Error al emitir comprobante.', 'error');
+      }
+    }
+
+    // Reminders Trigger
+    async function triggerAutomatedReminders() {
+      const btn = document.getElementById('btn-trigger-cron');
+      btn.disabled = true;
+      btn.textContent = 'Escaneando citas en 24h...';
+
+      const data = await apiFetch('/api/admin/reminders/trigger-cron', { method: 'POST' });
+      btn.disabled = false;
+      btn.textContent = '⚡ Ejecutar Escaneo Manual Ahora';
+
+      if (data && data.success) {
+        const box = document.getElementById('cron-result-box');
+        const content = document.getElementById('cron-result-content');
+        box.classList.remove('hidden');
+
+        if (data.data.processedCount === 0) {
+          content.innerHTML = '<div class="text-zinc-400">✓ No hay citas pendientes que requieran recordatorio en este intervalo de 24 horas.</div>';
+        } else {
+          content.innerHTML = data.data.reminders.map(r => `
+            <div class="p-3 bg-zinc-900 rounded-lg border border-zinc-800 text-xs">
+              <div class="font-bold text-white">${r.clientName} (${r.clientPhone})</div>
+              <div class="text-zinc-400 text-[11px] mt-1 whitespace-pre-line">${r.reminderMessage}</div>
+              <a href="${r.waLink}" target="_blank" class="inline-block mt-2 text-emerald-400 hover:underline">Abrir en WhatsApp →</a>
+            </div>
+          `).join('');
+        }
+      } else {
+        showAlert('Error al procesar recordatorios', 'error');
+      }
+    }
+
+    // Walk-in modal
+    function openWalkInModal() {
+      document.getElementById('walkin-date').value = document.getElementById('filter-date').value || new Date().toISOString().split('T')[0];
+      document.getElementById('walkin-time').value = '11:00';
+      openModal('modal-walkin');
+    }
+
+    async function submitWalkIn(e) {
+      e.preventDefault();
+      const date = document.getElementById('walkin-date').value;
+      const time = document.getElementById('walkin-time').value;
+      const startTime = `${date}T${time}:00.000Z`;
+
+      const payload = {
+        serviceId: document.getElementById('walkin-service').value,
+        staffId: document.getElementById('walkin-staff').value,
+        clientName: document.getElementById('walkin-name').value,
+        clientPhone: document.getElementById('walkin-phone').value,
+        clientEmail: document.getElementById('walkin-email').value,
+        startTime,
+        notes: document.getElementById('walkin-notes').value,
+      };
+
+      const data = await apiFetch('/api/admin/appointments/walk-in', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+
+      if (data && data.success) {
+        closeModal('modal-walkin');
+        showAlert(data.message);
+        loadAppointments();
+        loadDashboardSummary();
+      } else {
+        showAlert(data.message || 'Conflicto o error al agendar cita walk-in.', 'error');
+      }
+    }
+
+    // WhatsApp Engine & Webhook Simulator
+    async function loadWhatsAppStatus() {
+      const data = await apiFetch('/api/webhook/status');
+      if (!data || !data.success) return;
+
+      const info = data.data;
+      const providerBadge = document.getElementById('wa-provider-text');
+      const webhookUrl = document.getElementById('wa-webhook-url');
+      webhookUrl.textContent = `${window.location.origin}/api/webhook/whatsapp`;
+
+      if (info.provider === 'cloud_api') {
+        providerBadge.textContent = 'Meta WhatsApp Cloud API (Graph API)';
+        providerBadge.parentElement.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mt-1';
+      } else if (info.provider === 'twilio') {
+        providerBadge.textContent = 'Twilio WhatsApp API';
+        providerBadge.parentElement.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 mt-1';
+      } else {
+        providerBadge.textContent = 'MOCK (Simulador en Desarrollo)';
+      }
+
+      // Populate Simulator appointment selector
+      const aptsRes = await apiFetch('/api/admin/appointments');
+      if (aptsRes && aptsRes.success) {
+        const select = document.getElementById('sim-appointment-select');
+        const apts = aptsRes.data || [];
+        if (apts.length === 0) {
+          select.innerHTML = '<option value="">No hay citas disponibles para interactuar</option>';
+        } else {
+          select.innerHTML = apts.map(a => {
+            const time = new Date(a.start_time).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' });
+            return `<option value="${a.id}">[${a.status}] ${a.client_name} - ${a.service?.name} (${time})</option>`;
+          }).join('');
+        }
+      }
+
+      // Populate audit log table
+      const tbody = document.getElementById('wa-log-tbody');
+      const logs = info.recentDispatches || [];
+      if (logs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-zinc-500">No hay mensajes de WhatsApp emitidos aún en esta sesión.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = logs.map(l => {
+        const sent = new Date(l.sentAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        return `
+          <tr class="hover:bg-zinc-800/40 transition">
+            <td class="py-2.5 px-3 font-mono text-zinc-400">${sent}</td>
+            <td class="py-2.5 px-3 font-mono font-bold text-white">+${l.to}</td>
+            <td class="py-2.5 px-3 text-zinc-300 max-w-xs truncate" title="${l.text}">${l.text}</td>
+            <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded bg-zinc-800 font-mono text-[10px] text-indigo-300">${l.provider}</span></td>
+            <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 font-semibold text-[10px]">${l.status}</span></td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function simulateWebhook(action) {
+      const aptId = document.getElementById('sim-appointment-select').value;
+      if (!aptId) {
+        showAlert('Selecciona una cita primero en la lista desplegable.', 'error');
+        return;
+      }
+
+      const payload = {
+        buttonPayload: `${action}_${aptId}`,
+      };
+
+      const data = await apiFetch('/api/webhook/simulate', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+
+      const resBox = document.getElementById('sim-result-box');
+      const resContent = document.getElementById('sim-result-content');
+      resBox.classList.remove('hidden');
+
+      if (data && data.success) {
+        resContent.textContent = JSON.stringify(data.data, null, 2);
+        showAlert(`¡Evento de WhatsApp procesado! Estado de la cita actualizado a ${data.data.action}`);
+        loadAppointments();
+        loadDashboardSummary();
+        loadWhatsAppStatus();
+      } else {
+        resContent.textContent = data.message || 'Error simulando webhook';
+      }
+    }
+
+    // ==========================================
+    // Real-Time SSE Live Feed & Notifications
+    // ==========================================
+    let liveEventSource = null;
+    let liveSessionCount = 0;
+    let liveTotalCount = 0;
+    let soundEnabled = true;
+    let liveBadgeUnread = 0;
+    let currentActiveTab = 'agenda';
+    let liveHistoryLoaded = false;
+
+    function initLiveFeedSSE() {
+      if (!token) return;
+      if (liveEventSource) {
+        try { liveEventSource.close(); } catch(e) {}
+      }
+
+      const sseUrl = `/api/admin/live/stream?admin_token=${encodeURIComponent(token)}`;
+      liveEventSource = new EventSource(sseUrl);
+
+      liveEventSource.onopen = () => {
+        updateLiveStatus(true);
+      };
+
+      liveEventSource.onerror = () => {
+        updateLiveStatus(false);
+      };
+
+      liveEventSource.addEventListener('connected', () => {
+        updateLiveStatus(true);
+      });
+
+      liveEventSource.addEventListener('ping', () => {
+        updateLiveStatus(true);
+      });
+
+      liveEventSource.addEventListener('message', (e) => {
+        try {
+          const payload = JSON.parse(e.data);
+          handleLiveEvent(payload);
+        } catch (err) {
+          console.error('[Live SSE Parse Error]', err);
+        }
+      });
+    }
+
+    function updateLiveStatus(connected) {
+      const pill = document.getElementById('live-header-pill');
+      const tag = document.getElementById('live-connection-tag');
+      const net = document.getElementById('live-stat-net');
+
+      if (connected) {
+        if (pill) {
+          pill.className = 'hidden sm:flex items-center gap-1.5 px-2.5 py-0.5 text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-full';
+          const txt = document.getElementById('live-header-text');
+          if (txt) txt.textContent = 'SSE En Vivo';
+        }
+        if (tag) {
+          tag.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30';
+          tag.textContent = '🟢 SSE Conectado';
+        }
+        if (net) {
+          net.className = 'text-xs font-bold text-emerald-400';
+          net.textContent = 'Conectado y Escuchando';
+        }
+      } else {
+        if (pill) {
+          pill.className = 'hidden sm:flex items-center gap-1.5 px-2.5 py-0.5 text-[11px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/30 rounded-full';
+          const txt = document.getElementById('live-header-text');
+          if (txt) txt.textContent = 'Reconectando...';
+        }
+        if (tag) {
+          tag.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/30';
+          tag.textContent = '🟡 Reconectando';
+        }
+        if (net) {
+          net.className = 'text-xs font-bold text-amber-400';
+          net.textContent = 'Reconectando...';
+        }
+      }
+    }
+
+    function handleLiveEvent(event) {
+      const { type, data } = event;
+      const nowStr = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const lastTimeEl = document.getElementById('live-stat-last-time');
+      if (lastTimeEl) lastTimeEl.textContent = nowStr;
+
+      if (type === 'appointment:created') {
+        const apt = data.appointment;
+        liveSessionCount++;
+        liveTotalCount++;
+        const sessEl = document.getElementById('live-stat-session');
+        const totalEl = document.getElementById('live-stat-total');
+        if (sessEl) sessEl.textContent = liveSessionCount;
+        if (totalEl) totalEl.textContent = liveTotalCount;
+
+        if (currentActiveTab !== 'live') {
+          liveBadgeUnread++;
+          const badge = document.getElementById('live-badge-count');
+          if (badge) {
+            badge.textContent = liveBadgeUnread;
+            badge.classList.remove('hidden');
+          }
+        }
+
+        playNotificationSound();
+        showLiveToast('🔔 ¡Nueva Reserva Entrante!', `${apt.client_name} ha agendado "${apt.service?.name}" con ${apt.staff?.name}`);
+        prependLiveCard(apt, true);
+
+        loadDashboardSummary();
+        if (currentActiveTab === 'agenda') {
+          loadAppointments();
+        }
+      } else if (type === 'appointment:updated') {
+        const apt = data.appointment;
+        showLiveToast('🔄 Estado Actualizado', `${apt.client_name}: Cita #${apt.id.substring(0, 8)} ahora está ${apt.status}`);
+        updateLiveCardStatus(apt);
+        loadDashboardSummary();
+        if (currentActiveTab === 'agenda') {
+          loadAppointments();
+        }
+      } else if (type === 'payment:received') {
+        playNotificationSound();
+        showLiveToast('💳 Pago Confirmado', `${data.clientName} pagó $${data.amount.toFixed(2)} ${data.currency} (${data.serviceName})`, 'success');
+        loadDashboardSummary();
+        if (currentActiveTab === 'receipts') {
+          loadReceipts();
+        }
+      }
+    }
+
+    async function loadLiveHistory() {
+      try {
+        const data = await apiFetch('/api/admin/live/history?limit=30');
+        if (!data || !data.success) return;
+
+        liveHistoryLoaded = true;
+        const list = document.getElementById('live-feed-list');
+        const appointments = data.data || [];
+        liveTotalCount = appointments.length;
+        const totalEl = document.getElementById('live-stat-total');
+        if (totalEl) totalEl.textContent = liveTotalCount;
+
+        if (appointments.length === 0) {
+          list.innerHTML = `
+            <div id="live-empty-placeholder" class="text-center py-16 px-4 bg-zinc-900 border border-zinc-800 rounded-2xl">
+              <div class="text-4xl mb-3">📡</div>
+              <h3 class="text-base font-bold text-white">Esperando nuevas reservas...</h3>
+              <p class="text-xs text-zinc-400 mt-1 max-w-sm mx-auto">
+                Cuando un cliente agende en tu página pública, aparecerá aquí automáticamente con sonido y animación sin necesidad de recargar.
+              </p>
+            </div>
+          `;
+          return;
+        }
+
+        list.innerHTML = appointments.map(apt => renderLiveCard(apt, false)).join('');
+      } catch (err) {
+        console.error('Error loading live history:', err);
+      }
+    }
+
+    function renderLiveCard(apt, isNew = false) {
+      const dateFormatted = new Date(apt.start_time).toLocaleString('es-ES', {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+      const createdDate = apt.created_at ? new Date(apt.created_at) : new Date();
+      const timeAgoStr = formatTimeAgo(createdDate);
+
+      let statusBadge = '';
+      if (apt.status === 'CONFIRMED') {
+        statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">CONFIRMADA</span>`;
+      } else if (apt.status === 'PENDING') {
+        statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">PENDIENTE</span>`;
+      } else if (apt.status === 'COMPLETED') {
+        statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">COMPLETADA</span>`;
+      } else {
+        statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">CANCELADA</span>`;
+      }
+
+      const newBadge = isNew
+        ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500 text-zinc-950 uppercase tracking-wider animate-pulse">¡NUEVA EN VIVO!</span>`
+        : '';
+
+      const borderClass = isNew
+        ? 'border-emerald-500 shadow-xl shadow-emerald-500/20 ring-2 ring-emerald-500/40'
+        : 'border-zinc-800';
+
+      const cleanPhone = (apt.client_phone || '').replace(/\D/g, '');
+      const waUrl = cleanPhone ? `https://wa.me/${cleanPhone}` : '#';
+
+      return `
+        <div id="live-card-${apt.id}" class="bg-zinc-900 border ${borderClass} rounded-2xl p-4 sm:p-5 transition-all duration-700 hover:border-zinc-700">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-800/60">
+            <div class="flex items-center gap-2 flex-wrap">
+              ${newBadge}
+              <span class="text-xs font-semibold text-zinc-400">Registrada ${timeAgoStr}</span>
+              <span class="text-zinc-600">•</span>
+              <span class="text-xs font-mono text-zinc-500">ID: #${apt.id.substring(0, 8)}</span>
+            </div>
+            <div id="live-status-container-${apt.id}" class="flex items-center gap-2">
+              ${statusBadge}
+              ${apt.receipt ? `<span class="px-2 py-0.5 rounded bg-zinc-800 text-[11px] font-semibold text-emerald-400">PAGADO</span>` : ''}
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 py-3 text-xs">
+            <div>
+              <span class="text-zinc-500 block text-[11px] font-medium">Cliente</span>
+              <div class="font-bold text-white text-sm mt-0.5">${apt.client_name}</div>
+              <div class="flex items-center gap-2 mt-1">
+                <a href="${waUrl}" target="_blank" class="text-emerald-400 hover:underline flex items-center gap-1 font-mono text-[11px]">
+                  <span>💬</span> ${apt.client_phone || 'Sin teléfono'}
+                </a>
+              </div>
+              ${apt.client_email ? `<div class="text-[11px] text-zinc-400 truncate mt-0.5">${apt.client_email}</div>` : ''}
+            </div>
+
+            <div>
+              <span class="text-zinc-500 block text-[11px] font-medium">Servicio & Especialista</span>
+              <div class="font-bold text-white text-sm mt-0.5">${apt.service?.name || 'Servicio'}</div>
+              <div class="flex items-center gap-2 mt-1">
+                <span class="font-bold text-emerald-400">$${(apt.service?.price || 0).toFixed(2)}</span>
+                <span class="text-zinc-500">•</span>
+                <span class="text-zinc-400">${apt.service?.duration_minutes || 30} min</span>
+              </div>
+              <div class="text-[11px] text-indigo-300 mt-1">✂️ Especialista: <strong>${apt.staff?.name || 'Asignado'}</strong></div>
+            </div>
+
+            <div>
+              <span class="text-zinc-500 block text-[11px] font-medium">Fecha y Hora Programada</span>
+              <div class="font-bold text-indigo-400 text-sm mt-0.5">📅 ${dateFormatted}</div>
+              ${apt.notes ? `<div class="text-[11px] text-zinc-400 bg-zinc-950/60 p-2 rounded-lg border border-zinc-800/80 mt-1 italic">"${apt.notes}"</div>` : ''}
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-zinc-800/60 text-xs">
+            <div class="flex items-center gap-1 text-[11px] text-zinc-400">
+              <span>Token:</span>
+              <code class="font-mono text-zinc-300 bg-zinc-950 px-1.5 py-0.5 rounded border border-zinc-800">${apt.confirmation_token || '-'}</code>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+              ${apt.status !== 'COMPLETED' && apt.status !== 'CANCELLED' ? `
+                <button onclick="changeStatus('${apt.id}', 'CONFIRMED')" class="px-2.5 py-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-300 font-semibold text-xs transition">
+                  ✓ Confirmar
+                </button>
+                <button onclick="openReceiptModal('${apt.id}', '${apt.client_name}', '${apt.service?.name}', ${apt.service?.price || 0})" class="px-2.5 py-1.5 rounded-lg bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 font-semibold text-xs transition">
+                  🧾 Cobrar
+                </button>
+              ` : ''}
+              ${apt.receipt ? `
+                <a href="/receipt/${apt.id}?token=${apt.confirmation_token}&admin_token=${token}" target="_blank" class="px-2.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-semibold text-xs transition">
+                  🖨️ Ver Recibo
+                </a>
+              ` : ''}
+              <button onclick="sendDirectReminder('${apt.id}')" title="Enviar Recordatorio WhatsApp" class="px-2.5 py-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-300 font-semibold text-xs transition">
+                📲 WhatsApp
+              </button>
+              ${apt.status !== 'CANCELLED' ? `
+                <button onclick="changeStatus('${apt.id}', 'CANCELLED')" class="px-2.5 py-1.5 rounded-lg bg-rose-600/20 hover:bg-rose-600/40 text-rose-300 font-semibold text-xs transition">
+                  ✕ Cancelar
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function prependLiveCard(apt, isNew = true) {
+      const list = document.getElementById('live-feed-list');
+      if (!list) return;
+
+      const placeholder = document.getElementById('live-empty-placeholder');
+      if (placeholder) placeholder.remove();
+
+      const existing = document.getElementById(`live-card-${apt.id}`);
+      if (existing) {
+        existing.remove();
+      }
+
+      const temp = document.createElement('div');
+      temp.innerHTML = renderLiveCard(apt, isNew);
+      const newCard = temp.firstElementChild;
+      list.prepend(newCard);
+
+      if (isNew) {
+        setTimeout(() => {
+          if (newCard) {
+            newCard.classList.remove('border-emerald-500', 'shadow-xl', 'shadow-emerald-500/20', 'ring-2', 'ring-emerald-500/40');
+            newCard.classList.add('border-zinc-800');
+          }
+        }, 5000);
+      }
+    }
+
+    function updateLiveCardStatus(apt) {
+      const container = document.getElementById(`live-status-container-${apt.id}`);
+      if (container) {
+        let statusBadge = '';
+        if (apt.status === 'CONFIRMED') {
+          statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">CONFIRMADA</span>`;
+        } else if (apt.status === 'PENDING') {
+          statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">PENDIENTE</span>`;
+        } else if (apt.status === 'COMPLETED') {
+          statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">COMPLETADA</span>`;
+        } else {
+          statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">CANCELADA</span>`;
+        }
+        container.innerHTML = `
+          ${statusBadge}
+          ${apt.receipt ? `<span class="px-2 py-0.5 rounded bg-zinc-800 text-[11px] font-semibold text-emerald-400">PAGADO</span>` : ''}
+        `;
+      }
+    }
+
+    function formatTimeAgo(date) {
+      const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+      if (seconds < 10) return 'hace unos segundos';
+      if (seconds < 60) return `hace ${seconds} seg`;
+      const minutes = Math.floor(seconds / 60);
+      if (minutes < 60) return `hace ${minutes} min`;
+      const hours = Math.floor(minutes / 60);
+      if (hours < 24) return `hace ${hours} h`;
+      const days = Math.floor(hours / 24);
+      return `hace ${days} d`;
+    }
+
+    function toggleLiveSound() {
+      soundEnabled = !soundEnabled;
+      const icon = document.getElementById('live-sound-icon');
+      const label = document.getElementById('live-sound-label');
+      if (icon) icon.textContent = soundEnabled ? '🔔' : '🔕';
+      if (label) label.textContent = soundEnabled ? 'Sonido: ON' : 'Sonido: OFF';
+      showAlert(soundEnabled ? 'Sonido de notificaciones activado' : 'Sonido de notificaciones silenciado');
+    }
+
+    function playNotificationSound() {
+      if (!soundEnabled) return;
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.12);
+
+        gain.gain.setValueAtTime(0.18, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.35);
+      } catch (err) {}
+    }
+
+    async function simulateIncomingBooking() {
+      const btn = document.getElementById('btn-simulate-booking');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<span class="inline-block w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span> Transmitiendo...`;
+      }
+
+      try {
+        const res = await apiFetch('/api/admin/live/simulate', { method: 'POST' });
+        if (res && res.success) {
+          showAlert('⚡ Reserva simulada creada y emitida a través del canal SSE en tiempo real.');
+        } else {
+          showAlert(res?.message || 'Error al simular reserva', 'error');
+        }
+      } catch (err) {
+        showAlert('Error al conectar con el servidor', 'error');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = `<span>⚡ Simular Reserva Entrante</span>`;
+        }
+      }
+    }
+
+    function clearLiveVisualFeed() {
+      const list = document.getElementById('live-feed-list');
+      if (list) {
+        list.innerHTML = `
+          <div id="live-empty-placeholder" class="text-center py-16 px-4 bg-zinc-900 border border-zinc-800 rounded-2xl">
+            <div class="text-4xl mb-3">🧹</div>
+            <h3 class="text-base font-bold text-white">Feed visual limpiado</h3>
+            <p class="text-xs text-zinc-400 mt-1 max-w-sm mx-auto">
+              Las nuevas reservas que ingresen aparecerán aquí en vivo.
+            </p>
+          </div>
+        `;
+      }
+      liveSessionCount = 0;
+      const sessEl = document.getElementById('live-stat-session');
+      if (sessEl) sessEl.textContent = '0';
+      showAlert('Vista visual de feed reiniciada para esta sesión.');
+    }
+
+    function clearLiveBadge() {
+      liveBadgeUnread = 0;
+      const badge = document.getElementById('live-badge-count');
+      if (badge) {
+        badge.textContent = '0';
+        badge.classList.add('hidden');
+      }
+    }
+
+    function showLiveToast(title, message, type = 'info') {
+      const container = document.getElementById('live-toast-container');
+      if (!container) return;
+
+      const toast = document.createElement('div');
+      const borderColor = type === 'success' ? 'border-emerald-500/80 bg-zinc-900/95' : 'border-indigo-500/80 bg-zinc-900/95';
+      toast.className = `pointer-events-auto transform translate-x-full transition-all duration-300 ease-out border ${borderColor} rounded-2xl p-4 shadow-2xl backdrop-blur-md flex items-start gap-3`;
+      toast.innerHTML = `
+        <div class="text-xl mt-0.5">${type === 'success' ? '💳' : '📅'}</div>
+        <div class="flex-1 text-xs">
+          <div class="font-bold text-white">${title}</div>
+          <div class="text-zinc-300 mt-0.5 leading-relaxed">${message}</div>
+        </div>
+        <button onclick="this.parentElement.remove()" class="text-zinc-500 hover:text-white text-xs">✕</button>
+      `;
+
+      container.appendChild(toast);
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-x-full');
+        toast.classList.add('translate-x-0');
+      });
+
+      setTimeout(() => {
+        toast.classList.remove('translate-x-0');
+        toast.classList.add('translate-x-full', 'opacity-0');
+        setTimeout(() => toast.remove(), 400);
+      }, 5000);
+    }
+
+    // Tabs & Modals
+    function switchTab(tab) {
+      currentActiveTab = tab;
+      ['agenda', 'live', 'services', 'staff', 'receipts', 'reminders'].forEach(t => {
+        const view = document.getElementById(`view-${t}`);
+        const btn = document.getElementById(`tab-${t}`);
+        if (view) view.classList.add('hidden');
+        if (btn) btn.className = 'px-4 py-2 rounded-xl text-xs font-bold text-zinc-400 hover:text-white bg-zinc-900 hover:bg-zinc-800 transition flex items-center gap-2';
+      });
+
+      const activeView = document.getElementById(`view-${tab}`);
+      const activeBtn = document.getElementById(`tab-${tab}`);
+      if (activeView) activeView.classList.remove('hidden');
+      if (activeBtn) activeBtn.className = 'px-4 py-2 rounded-xl text-xs font-bold transition tab-active flex items-center gap-2';
+
+      if (tab === 'live') {
+        clearLiveBadge();
+        if (!liveHistoryLoaded) {
+          loadLiveHistory();
+        }
+      }
+      if (tab === 'agenda') loadAppointments();
+      if (tab === 'receipts') loadReceipts();
+      if (tab === 'services') loadServices();
+      if (tab === 'staff') loadStaff();
+      if (tab === 'reminders') loadWhatsAppStatus();
+    }
+
+    function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+    function openCalendarSyncModal() {
+      if (!currentBusiness) return;
+      const feedUrl = `${window.location.origin}/api/calendar/feed/${currentBusiness.slug}.ics`;
+      document.getElementById('cal-feed-url').value = feedUrl;
+      document.getElementById('btn-open-gcal').href = `https://calendar.google.com/calendar/r/settings/addbyurl?cid=${encodeURIComponent(feedUrl)}`;
+      openModal('modal-calendar-sync');
+    }
+
+    function copyCalendarFeed() {
+      const input = document.getElementById('cal-feed-url');
+      input.select();
+      navigator.clipboard.writeText(input.value);
+      showAlert('¡Enlace de suscripción al calendario copiado al portapapeles!');
+    }
+
+    function logout() {
+      localStorage.removeItem('citaflow_token');
+      window.location.href = '/login';
+    }
+  </script>
+
+  <!-- Floating Live Toast Notifications Container -->
+  <div id="live-toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
+
+</body>
+</html>
