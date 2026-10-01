@@ -1,0 +1,53 @@
+# Development Compose with hot-reload volume mounts
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: citaflow-app-dev
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - DATABASE_URL=postgresql://citaflow_user:citaflow_secure_pass_2026@db:5432/citaflow_db?schema=public
+      - JWT_SECRET=citaflow_super_secure_production_ready_jwt_secret_2026_x
+      - FRONTEND_URL=http://localhost:3000
+      - WHATSAPP_PROVIDER=mock
+      - SEED_ON_STARTUP=true
+    volumes:
+      - ./src:/app/src
+      - ./prisma:/app/prisma
+    command: ["node", "--watch", "src/server.js"]
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - citaflow-net
+
+  db:
+    image: postgres:16-alpine
+    container_name: citaflow-db-dev
+    environment:
+      - POSTGRES_USER=citaflow_user
+      - POSTGRES_PASSWORD=citaflow_secure_pass_2026
+      - POSTGRES_DB=citaflow_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - citaflow_dev_pgdata:/var/lib/postgresql/data
+      - ./prisma/schema.postgres.sql:/docker-entrypoint-initdb.d/01_init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U citaflow_user -d citaflow_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - citaflow-net
+
+networks:
+  citaflow-net:
+    driver: bridge
+
+volumes:
+  citaflow_dev_pgdata:

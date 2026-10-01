@@ -1,0 +1,58 @@
+services:
+  # CitaFlow Application (Node.js + Express + Prisma)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: citaflow-app
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-citaflow_user}:${POSTGRES_PASSWORD:-citaflow_secure_pass_2026}@db:5432/${POSTGRES_DB:-citaflow_db}?schema=public
+      - JWT_SECRET=${JWT_SECRET:-citaflow_super_secure_production_ready_jwt_secret_2026_x}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
+      - APP_NAME=CitaFlow
+      - WHATSAPP_PROVIDER=${WHATSAPP_PROVIDER:-mock}
+      - META_WA_PHONE_NUMBER_ID=${META_WA_PHONE_NUMBER_ID:-}
+      - META_WA_ACCESS_TOKEN=${META_WA_ACCESS_TOKEN:-}
+      - META_WA_VERIFY_TOKEN=${META_WA_VERIFY_TOKEN:-citaflow_meta_verify_token_2026}
+      - SEED_ON_STARTUP=${SEED_ON_STARTUP:-true}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - citaflow-net
+
+  # PostgreSQL Relational Database (Strict 3NF Schema)
+  db:
+    image: postgres:16-alpine
+    container_name: citaflow-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-citaflow_user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-citaflow_secure_pass_2026}
+      - POSTGRES_DB=${POSTGRES_DB:-citaflow_db}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - citaflow_pgdata:/var/lib/postgresql/data
+      - ./prisma/schema.postgres.sql:/docker-entrypoint-initdb.d/01_init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-citaflow_user} -d ${POSTGRES_DB:-citaflow_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - citaflow-net
+
+networks:
+  citaflow-net:
+    driver: bridge
+
+volumes:
+  citaflow_pgdata:
+    driver: local
