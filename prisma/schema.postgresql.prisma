@@ -1,0 +1,102 @@
+// PostgreSQL Prisma Schema for Production Deployment
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Business {
+  id            String        @id @default(cuid())
+  name          String        @db.VarChar(255)
+  slug          String        @unique @db.VarChar(100)
+  email         String        @unique @db.VarChar(255)
+  password_hash String        @db.VarChar(255)
+  phone         String        @db.VarChar(50)
+  address       String?       @db.VarChar(255)
+  currency      String        @default("USD") @db.VarChar(10)
+  created_at    DateTime      @default(now()) @db.Timestamp(6)
+  updated_at    DateTime      @updatedAt @db.Timestamp(6)
+
+  services      Service[]
+  staff         Staff[]
+  appointments  Appointment[]
+
+  @@map("businesses")
+}
+
+model Service {
+  id               String        @id @default(cuid())
+  business_id      String
+  name             String        @db.VarChar(255)
+  description      String?       @db.Text
+  duration_minutes Int
+  price            Float
+  created_at       DateTime      @default(now()) @db.Timestamp(6)
+  updated_at       DateTime      @updatedAt @db.Timestamp(6)
+
+  business         Business      @relation(fields: [business_id], references: [id], onDelete: Cascade)
+  appointments     Appointment[]
+
+  @@map("services")
+}
+
+model Staff {
+  id            String        @id @default(cuid())
+  business_id   String
+  name          String        @db.VarChar(255)
+  email         String?       @db.VarChar(255)
+  phone         String?       @db.VarChar(50)
+  avatar_url    String?       @db.VarChar(500)
+  schedule_json String        @db.Text // Working hours by day of week (JSON string)
+  created_at    DateTime      @default(now()) @db.Timestamp(6)
+  updated_at    DateTime      @updatedAt @db.Timestamp(6)
+
+  business      Business      @relation(fields: [business_id], references: [id], onDelete: Cascade)
+  appointments  Appointment[]
+
+  @@map("staff")
+}
+
+model Appointment {
+  id                 String    @id @default(cuid())
+  business_id        String
+  service_id         String
+  staff_id           String
+  client_name        String    @db.VarChar(255)
+  client_phone       String    @db.VarChar(50)
+  client_email       String    @db.VarChar(255)
+  start_time         DateTime  @db.Timestamp(6)
+  end_time           DateTime  @db.Timestamp(6)
+  status             String    @default("PENDING") @db.VarChar(30)
+  confirmation_token String    @unique @db.VarChar(100)
+  reminder_sent_at   DateTime? @db.Timestamp(6)
+  notes              String?   @db.Text
+  created_at         DateTime  @default(now()) @db.Timestamp(6)
+  updated_at         DateTime  @updatedAt @db.Timestamp(6)
+
+  business           Business  @relation(fields: [business_id], references: [id], onDelete: Cascade)
+  service            Service   @relation(fields: [service_id], references: [id], onDelete: Restrict)
+  staff              Staff     @relation(fields: [staff_id], references: [id], onDelete: Restrict)
+  receipt            Receipt?
+
+  @@index([business_id, start_time])
+  @@index([staff_id, start_time])
+  @@map("appointments")
+}
+
+model Receipt {
+  id             String      @id @default(cuid())
+  appointment_id String      @unique
+  receipt_number String      @unique @db.VarChar(50)
+  total_amount   Float
+  payment_method String      @default("CASH") @db.VarChar(30)
+  status         String      @default("PAID") @db.VarChar(30)
+  issued_at      DateTime    @default(now()) @db.Timestamp(6)
+
+  appointment    Appointment @relation(fields: [appointment_id], references: [id], onDelete: Cascade)
+
+  @@map("receipts")
+}
